@@ -10,6 +10,9 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     strands.resize(strandCount);
     segmentLength = hairLength / (particleCount - 1);
 
+    hairVoxel = std::make_shared<HairVoxel>(-hairLength - 0.1, -hairLength - 0.1, -hairLength - 0.1,
+                                            segmentLength/2, particleCount*5);
+
     std::vector<Eigen::Vector3d> dirs;
     dirs.resize(strandCount);
     double angleInc = (2*M_PI)/strandCount;
@@ -29,7 +32,7 @@ Hair::~Hair() {}
 
 void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
     double sDamping = 0.8;
-
+    hairVoxel->reset();
     for (int i = 0; i < strands.size(); i++) {
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         // accumulate forces
@@ -75,6 +78,15 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
             for (int k = 0; k < spheres.size(); k++) {
                 handleCollision(spheres[k], particle, 50.0);
             }
+        }
+    }
+
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            if (particle->fixed) continue;
+            hairVoxel->addParticleDensity(particle);
         }
     }
 

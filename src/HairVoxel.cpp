@@ -17,11 +17,17 @@ zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
                                                                          std::vector<double>(voxelCount, 0)));
 }
 
+void HairVoxel::reset() {
+    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
+                                                                 std::vector<std::vector<double>>(voxelCount,
+                                                                                                  std::vector<double>(voxelCount, 0)));
+}
+
 void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
     Eigen::Vector3d p = particle->x;
-    assert(p.x >= xMin);
-    assert(p.y >= yMin);
-    assert(p.z >= zMin);
+    assert(p.x() >= xMin);
+    assert(p.y() >= yMin);
+    assert(p.z() >= zMin);
 
     long x0Index = floor((p.x() - xMin)/voxelSize);
     int x1Index = x0Index+1;

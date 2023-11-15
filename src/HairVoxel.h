@@ -13,6 +13,7 @@ class HairVoxel {
 public:
     HairVoxel(double xMin, double yMin, double zMin, double voxelSize, int voxelCount);
     void addParticleDensity(const std::shared_ptr<Particle>& particle);
+    void reset();
 private:
     double xMin;
     double yMin;
