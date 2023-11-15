@@ -6,11 +6,11 @@
 #include "Particle.h"
 #include "GLSL.h"
 
-Strand::Strand(double mass, double segmentLength, int particleCount, const Eigen::Vector3d& rootLoc) : segmentLength(segmentLength) {
+Strand::Strand(double mass, double segmentLength, int particleCount, const Eigen::Vector3d& rootLoc, const Eigen::Vector3d& dir) : segmentLength(segmentLength) {
     particles.clear();
     particles.resize(particleCount);
 
-    Eigen::Vector3d dir(1, 0, 0);
+//    Eigen::Vector3d dir(1, 0, 0);
     double particleMass = mass/particleCount;
     for (int i = 0; i < particleCount; i++) {
         std::shared_ptr<Particle> particle = std::make_shared<Particle>();
@@ -18,7 +18,8 @@ Strand::Strand(double mass, double segmentLength, int particleCount, const Eigen
         particle->x = particle->x0;
         particle->xTemp = particle->x0;
         particle->m = particleMass;
-        particle->r = 0.1;
+        particle->r = 0.009;
+        particle->f = Eigen::Vector3d(0, 0, 0);
         particle->v = Eigen::Vector3d(0, 0, 0);
         if (i == 0) {
             particle->fixed = true;

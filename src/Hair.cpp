@@ -9,15 +9,25 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     strands.clear();
     strands.resize(strandCount);
     segmentLength = hairLength / (particleCount - 1);
+
+    std::vector<Eigen::Vector3d> dirs;
+    dirs.resize(strandCount);
+    double angleInc = (2*M_PI)/strandCount;
     for (int i = 0; i < strandCount; i++) {
-        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0, 0));
+        double angle = i*angleInc;
+        Eigen::Vector3d dir(sin(angle),0,cos(angle));
+        dirs[i] = dir;
+    }
+
+    for (int i = 0; i < strandCount; i++) {
+        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0, 0), dirs[i]);
         strands[i] = strand;
     }
 }
 
 Hair::~Hair() {}
 
-void Hair::step(double h, const Eigen::Vector3d &grav) {
+void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
     double sDamping = 0.8;
 
     for (int i = 0; i < strands.size(); i++) {
@@ -25,7 +35,8 @@ void Hair::step(double h, const Eigen::Vector3d &grav) {
         // accumulate forces
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
-            particle->f = particle->m * grav;
+            if (particle->fixed) continue;
+            particle->f += particle->m * grav;
         }
         // update velocity and temp pos
         for (int j = 0; j < particles.size(); j++) {
@@ -33,6 +44,7 @@ void Hair::step(double h, const Eigen::Vector3d &grav) {
             if (particle->fixed) continue;
             particle->v = particle->v + h * (particle->f / particle->m);
             particle->xTemp = particle->x + particle->v * h + particle->f * h * h;
+            particle->f = Eigen::Vector3d(0, 0, 0);
         }
 
         // solve constraint
@@ -56,8 +68,25 @@ void Hair::step(double h, const Eigen::Vector3d &grav) {
         std::shared_ptr<Particle> lastParticle = particles[particles.size()-1]; // no damping for last particle
         lastParticle->v = (lastParticle->xTemp - lastParticle->x)/h;
         lastParticle->x = lastParticle->xTemp;
+
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            if (particle->fixed) continue;
+            for (int k = 0; k < spheres.size(); k++) {
+                handleCollision(spheres[k], particle, 50.0);
+            }
+        }
     }
 
+}
+
+void Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
+    Eigen::Vector3d dist = dynamicParticle->x - object->x;
+    double distNorm = dist.norm();
+    if (distNorm <= object->r + dynamicParticle->r) {
+        Eigen::Vector3d tVec = (dist/distNorm) * (object->r + dynamicParticle->r - distNorm);
+        dynamicParticle->f += kc * tVec;
+    }
 }
 
 void Hair::init() {

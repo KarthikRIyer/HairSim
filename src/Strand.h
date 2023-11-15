@@ -15,7 +15,7 @@ class Particle;
 
 class Strand {
 public:
-    Strand(double mass, double segmentLength, int particleCount, const Eigen::Vector3d& rootLoc);
+    Strand(double mass, double segmentLength, int particleCount, const Eigen::Vector3d& rootLoc, const Eigen::Vector3d& dirs);
     virtual ~Strand();
     void draw();
     void reset();

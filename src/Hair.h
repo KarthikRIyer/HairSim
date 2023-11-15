@@ -13,7 +13,7 @@ public:
     Hair(int particleCount, int strandCount, double mass, double hairLength);
     virtual ~Hair();
 
-    void step(double h, const Eigen::Vector3d &grav);
+    void step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres);
     void init();
     void draw();
     void reset();
@@ -23,6 +23,8 @@ private:
     int strandCount;
     double segmentLength;
     std::vector<std::shared_ptr<Strand>> strands;
+
+    void handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc);
 };
 
 

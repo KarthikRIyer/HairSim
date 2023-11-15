@@ -38,7 +38,7 @@ void Scene::load(const string &RESOURCE_DIR)
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(10, 1, 0.1, 0.4);
+    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4);
     sphereShape->init();
 }
 
@@ -60,7 +60,7 @@ void Scene::step()
 	t += h;
 	
 	// Simulate the hair
-	hair->step(h, Eigen::Vector3d(0.0, -9.8, 0.0));
+	hair->step(h, Eigen::Vector3d(0.0, -9.8, 0.0), spheres);
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
