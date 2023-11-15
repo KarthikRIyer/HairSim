@@ -30,7 +30,10 @@ public:
 	Eigen::Vector3d x0; // initial position
 	Eigen::Vector3d v0; // initial velocity
 	Eigen::Vector3d x;  // position
+	Eigen::Vector3d xTemp;  // temp position
+	Eigen::Vector3d d;  // correction vector
 	Eigen::Vector3d v;  // velocity
+	Eigen::Vector3d f;  // force
 	bool fixed;
 	
 private:

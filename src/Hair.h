@@ -10,16 +10,18 @@
 
 class Hair {
 public:
-    Hair(int particleCount, int strandCount, double mass);
+    Hair(int particleCount, int strandCount, double mass, double hairLength);
     virtual ~Hair();
 
-    void step(double h);
+    void step(double h, const Eigen::Vector3d &grav);
     void init();
     void draw();
+    void reset();
 
 private:
     int particleCount;
     int strandCount;
+    double segmentLength;
     std::vector<std::shared_ptr<Strand>> strands;
 };
 

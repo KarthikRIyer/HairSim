@@ -30,7 +30,7 @@ void Scene::load(const string &RESOURCE_DIR)
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(5, 1, 0.1);
+    hair = std::make_shared<Hair>(10, 1, 0.1, 0.4);
 }
 
 void Scene::tare()
@@ -41,6 +41,7 @@ void Scene::tare()
 void Scene::reset()
 {
 	t = 0.0;
+	hair->reset();
 }
 
 void Scene::step()
@@ -48,7 +49,7 @@ void Scene::step()
 	t += h;
 	
 	// Simulate the hair
-	hair->step(h);
+	hair->step(h, Eigen::Vector3d(0.0, -9.8, 0.0));
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
