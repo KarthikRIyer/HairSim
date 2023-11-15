@@ -4,6 +4,8 @@
 
 #include "HairVoxel.h"
 #include "Particle.h"
+#include "GLSL.h"
+#include <iostream>
 
 HairVoxel::HairVoxel(double xMin, double yMin, double zMin, double voxelSize, int voxelCount) : xMin(xMin), yMin(yMin),
 zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
@@ -18,9 +20,18 @@ zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
 }
 
 void HairVoxel::reset() {
-    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
-                                                                 std::vector<std::vector<double>>(voxelCount,
-                                                                                                  std::vector<double>(voxelCount, 0)));
+//    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
+//                                                                 std::vector<std::vector<double>>(voxelCount,
+//                                                                                                  std::vector<double>(voxelCount, 0)));
+
+    for (int i = 0; i < densityVoxel.size(); i++) {
+        for (int j = 0; j < densityVoxel[0].size(); j++) {
+            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
+                densityVoxel[i][j][k] = 0;
+            }
+        }
+    }
+
 }
 
 void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
@@ -29,7 +40,7 @@ void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
     assert(p.y() >= yMin);
     assert(p.z() >= zMin);
 
-    long x0Index = floor((p.x() - xMin)/voxelSize);
+    int x0Index = floor((p.x() - xMin)/voxelSize);
     int x1Index = x0Index+1;
     double x0 = xMin + x0Index*voxelSize;
     double x1 = xMin + x1Index*voxelSize;
@@ -53,4 +64,25 @@ void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
     densityVoxel[x1Index][y0Index][z1Index] += ((1.0 - abs(p.x() - x1))*(1.0 - abs(p.y() - y0))*(1.0 - abs(p.z() - z1)));
     densityVoxel[x1Index][y1Index][z1Index] += ((1.0 - abs(p.x() - x1))*(1.0 - abs(p.y() - y1))*(1.0 - abs(p.z() - z1)));
 
+}
+
+void HairVoxel::draw() {
+    glColor3f(0.8, 0.8,0.8);
+    for (int i = 0; i < densityVoxel.size(); i++) {
+        for (int j = 0; j < densityVoxel[0].size(); j++) {
+            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
+                double x = xMin + i*voxelSize;
+                double y = yMin + j*voxelSize;
+                double z = zMin + k*voxelSize;
+                double density = densityVoxel[i][j][k];
+                if (density == 0) continue;
+                glPointSize(density);
+                glBegin(GL_POINTS);
+                glVertex3d(x, y, z);
+//                std::cout<<"x: "<<x<<" y: "<<y<<" z: "<<z<<"\n";
+                glEnd();
+                GLSL::checkError(GET_FILE_LINE);
+            }
+        }
+    }
 }
