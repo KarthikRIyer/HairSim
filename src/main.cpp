@@ -214,10 +214,17 @@ void render()
 //	prog->bind();
 //	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
 //	MV->pushMatrix();
-	scene->draw(MV, prog);
+	scene->drawHair();
 //	MV->popMatrix();
 //	prog->unbind();
     progSimple->unbind();
+
+    prog->bind();
+	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
+	MV->pushMatrix();
+    scene->draw(MV, prog);
+	MV->popMatrix();
+	prog->unbind();
 	
 	//////////////////////////////////////////////////////
 	// Cleanup

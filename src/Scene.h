@@ -31,7 +31,8 @@ public:
 	void step();
 	
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
-	
+	void drawHair() const;
+
 	double getTime() const { return t; }
 	
 private:
@@ -41,9 +42,8 @@ private:
 
 	std::shared_ptr<Hair> hair;
 
-//	std::shared_ptr<Shape> sphereShape;
-//	std::shared_ptr<Cloth> cloth;
-//	std::vector< std::shared_ptr<Particle> > spheres;
+	std::shared_ptr<Shape> sphereShape;
+	std::vector< std::shared_ptr<Particle> > spheres;
 };
 
 #endif

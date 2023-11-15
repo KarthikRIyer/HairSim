@@ -26,16 +26,27 @@ void Scene::load(const string &RESOURCE_DIR)
 	
 	grav << 0.0, -9.8, 0.0;
 
+    sphereShape = make_shared<Shape>();
+    sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
+
+    auto sphere = make_shared<Particle>(sphereShape);
+    spheres.push_back(sphere);
+    sphere->r = 0.1;
+    sphere->x = Vector3d(0.0, -0.3, 0.0);
+
 }
 
 void Scene::init()
 {
     hair = std::make_shared<Hair>(10, 1, 0.1, 0.4);
+    sphereShape->init();
 }
 
 void Scene::tare()
 {
-
+    for(int i = 0; i < (int)spheres.size(); ++i) {
+        spheres[i]->tare();
+    }
 }
 
 void Scene::reset()
@@ -54,7 +65,13 @@ void Scene::step()
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
 {
-//	glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
-	hair->draw();
-//	cloth->draw(MV, prog);
+    glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
+    for(int i = 0; i < (int)spheres.size(); ++i) {
+        spheres[i]->draw(MV, prog);
+    }
+}
+
+void Scene::drawHair() const
+{
+    hair->draw();
 }
