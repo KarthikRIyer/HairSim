@@ -33,7 +33,7 @@ Hair::~Hair() {}
 void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
     double sDamping = 0.9;
     double sFriction = 0.1;
-//    double sRepulsion = 0.00005;
+//    double sRepulsion = 0.00000;
     double sRepulsion = 0.00005;
     hairVoxel->reset();
     for (int i = 0; i < strands.size(); i++) {
@@ -75,11 +75,17 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         lastParticle->v = (lastParticle->xTemp - lastParticle->x)/h;
         lastParticle->x = lastParticle->xTemp;
 
-        for (int j = 0; j < particles.size(); j++) {
-            std::shared_ptr<Particle> particle = particles[j];
-            if (particle->fixed) continue;
+        for (int j = 1; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle1 = particles[j];
+            std::shared_ptr<Particle> particle0 = particles[j-1];
+            if (particle1->fixed) continue;
             for (int k = 0; k < spheres.size(); k++) {
-                handleCollision(spheres[k], particle, 50.0);
+                bool collision = handleCollision(spheres[k], particle1, 50.0);
+                if (collision) {
+//                    Eigen::Vector3d dir = particle1->x - particle0->x;
+//                    dir.normalize();
+//                    particle1->x = particle0->x + dir * segmentLength;
+                }
             }
         }
     }
@@ -116,13 +122,16 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
 
 }
 
-void Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
+bool Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
     Eigen::Vector3d dist = dynamicParticle->x - object->x;
     double distNorm = dist.norm();
-    if (distNorm <= object->r + dynamicParticle->r) {
+    if (distNorm < object->r + dynamicParticle->r) {
         Eigen::Vector3d tVec = (dist/distNorm) * (object->r + dynamicParticle->r - distNorm);
-        dynamicParticle->f += kc * tVec;
+//        dynamicParticle->x += tVec;
+                dynamicParticle->f += kc * tVec;
+        return true;
     }
+    return false;
 }
 
 void Hair::init() {

@@ -25,7 +25,7 @@ private:
     double segmentLength;
     std::vector<std::shared_ptr<Strand>> strands;
     std::shared_ptr<HairVoxel> hairVoxel;
-    void handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc);
+    bool handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc);
 };
 
 
