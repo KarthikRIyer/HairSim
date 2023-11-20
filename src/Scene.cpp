@@ -60,7 +60,7 @@ void Scene::step()
 	t += h;
 	
 	// Simulate the hair
-	hair->step(h, Eigen::Vector3d(0.0, -9.8, 0.0), spheres);
+	hair->step(h, grav, spheres);
 }
 
 void Scene::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const

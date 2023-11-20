@@ -31,7 +31,10 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
 Hair::~Hair() {}
 
 void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
-    double sDamping = 0.8;
+    double sDamping = 0.9;
+    double sFriction = 0.1;
+//    double sRepulsion = 0.00005;
+    double sRepulsion = 0.00005;
     hairVoxel->reset();
     for (int i = 0; i < strands.size(); i++) {
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
@@ -87,6 +90,27 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
             std::shared_ptr<Particle> particle = particles[j];
             if (particle->fixed) continue;
             hairVoxel->addParticleDensity(particle);
+        }
+    }
+//    hairVoxel->buildDensity();
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            if (particle->fixed) continue;
+            hairVoxel->addParticleVelocity(particle);
+        }
+    }
+    // handle friction
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            if (particle->fixed) continue;
+            Eigen::Vector3d gridVel = hairVoxel->getGridVelocity(particle->x);
+            particle->v = (1.0 - sFriction) * particle->v + sFriction * gridVel;
+            Eigen::Vector3d grad = hairVoxel->getGradient(particle->x);
+            particle->v += (sRepulsion*-grad)/h;
         }
     }
 
