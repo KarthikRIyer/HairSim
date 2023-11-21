@@ -4,6 +4,7 @@
 
 #include "Hair.h"
 #include "Particle.h"
+#include <tbb/tbb.h>
 
 Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): particleCount(particleCount), strandCount(strandCount) {
     strands.clear();
@@ -36,7 +37,8 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
 //    double sRepulsion = 0.00000;
     double sRepulsion = 0.00005;
     hairVoxel->reset();
-    for (int i = 0; i < strands.size(); i++) {
+
+    tbb::parallel_for((size_t)0, strands.size(), [=](size_t i){
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         // accumulate forces
         for (int j = 0; j < particles.size(); j++) {
@@ -88,7 +90,61 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
                 }
             }
         }
-    }
+    });
+
+//    for (int i = 0; i < strands.size(); i++) {
+//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+//        // accumulate forces
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            particle->f += particle->m * grav;
+//        }
+//        // update velocity and temp pos
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            particle->v = particle->v + h * (particle->f / particle->m);
+//            particle->xTemp = particle->x + particle->v * h + particle->f * h * h;
+//            particle->f = Eigen::Vector3d(0, 0, 0);
+//        }
+//
+//        // solve constraint
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            Eigen::Vector3d particle1Pos = particle1->xTemp;
+//            Eigen::Vector3d dir = particle1->xTemp - particle0->xTemp;
+//            dir.normalize();
+//            particle1->xTemp = particle0->xTemp + dir * segmentLength; // maintain inextensibility
+//            particle1->d = particle1Pos - particle1->xTemp; // correction vector
+//        }
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            if (particle0->fixed) continue;
+//
+//            particle0->v = ((particle0->xTemp - particle0->x)/h) + sDamping * (particle1->d/h);
+//            particle0->x = particle0->xTemp;
+//        }
+//        std::shared_ptr<Particle> lastParticle = particles[particles.size()-1]; // no damping for last particle
+//        lastParticle->v = (lastParticle->xTemp - lastParticle->x)/h;
+//        lastParticle->x = lastParticle->xTemp;
+//
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            if (particle1->fixed) continue;
+//            for (int k = 0; k < spheres.size(); k++) {
+//                bool collision = handleCollision(spheres[k], particle1, 50.0);
+//                if (collision) {
+////                    Eigen::Vector3d dir = particle1->x - particle0->x;
+////                    dir.normalize();
+////                    particle1->x = particle0->x + dir * segmentLength;
+//                }
+//            }
+//        }
+//    }
 
     for (int i = 0; i < strands.size(); i++) {
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
@@ -108,7 +164,7 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         }
     }
     // handle friction
-    for (int i = 0; i < strands.size(); i++) {
+    tbb::parallel_for((size_t)0, strands.size(), [=](int i){
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
@@ -118,7 +174,18 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
             Eigen::Vector3d grad = hairVoxel->getGradient(particle->x);
             particle->v += (sRepulsion*-grad)/h;
         }
-    }
+    });
+//    for (int i = 0; i < strands.size(); i++) {
+//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            Eigen::Vector3d gridVel = hairVoxel->getGridVelocity(particle->x);
+//            particle->v = (1.0 - sFriction) * particle->v + sFriction * gridVel;
+//            Eigen::Vector3d grad = hairVoxel->getGradient(particle->x);
+//            particle->v += (sRepulsion*-grad)/h;
+//        }
+//    }
 
 }
 

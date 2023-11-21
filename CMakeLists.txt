@@ -140,6 +140,7 @@ set(ONEDPL_BACKEND tbb)
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/oneTBB-2021.11.0)
 add_subdirectory(${PROJECT_SOURCE_DIR}/deps/oneDPL-oneDPL-2022.2.0-rc1)
 include_directories(${PROJECT_SOURCE_DIR}/deps/oneDPL-oneDPL-2022.2.0-rc1/include)
+include_directories(${PROJECT_SOURCE_DIR}/deps/oneTBB-2021.11.0/include)
 
 TARGET_LINK_LIBRARIES(${CMAKE_PROJECT_NAME} glfw ${GLFW_LIBRARIES} tbb oneDPL)
 
