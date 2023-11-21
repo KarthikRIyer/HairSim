@@ -6,7 +6,6 @@
 #include "Particle.h"
 #include "GLSL.h"
 #include <iostream>
-#include <tbb/tbb.h>
 
 HairVoxel::HairVoxel(double xMin, double yMin, double zMin, double voxelSize, int voxelCount) : xMin(xMin), yMin(yMin),
 zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
@@ -15,13 +14,13 @@ zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
     yMax = yMin + voxelCount * voxelSize;
     zMax = zMin + voxelCount * voxelSize;
 
-    densityVoxel = tbb::concurrent_vector<tbb::concurrent_vector<tbb::concurrent_vector<double>>>(voxelCount,
-                                                                                                  tbb::concurrent_vector<tbb::concurrent_vector<double>>(voxelCount,
-                                                                                                                                                         tbb::concurrent_vector<double>(voxelCount, 0)));
+    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
+                                                                 std::vector<std::vector<double>>(voxelCount,
+                                                                         std::vector<double>(voxelCount, 0)));
 
-    velocityVoxel = tbb::concurrent_vector<tbb::concurrent_vector<tbb::concurrent_vector<Eigen::Vector3d>>>(voxelCount,
-                                                                                                            tbb::concurrent_vector<tbb::concurrent_vector<Eigen::Vector3d>>(voxelCount,
-                                                                                                                                                                            tbb::concurrent_vector<Eigen::Vector3d>(voxelCount, Eigen::Vector3d(0, 0, 0))));
+    velocityVoxel = std::vector<std::vector<std::vector<Eigen::Vector3d>>>(voxelCount,
+                                                                 std::vector<std::vector<Eigen::Vector3d>>(voxelCount,
+                                                                                                  std::vector<Eigen::Vector3d>(voxelCount, Eigen::Vector3d(0, 0, 0))));
 }
 
 void HairVoxel::reset() {
@@ -29,43 +28,20 @@ void HairVoxel::reset() {
 //                                                                 std::vector<std::vector<double>>(voxelCount,
 //                                                                                                  std::vector<double>(voxelCount, 0)));
 
-    tbb::parallel_for(tbb::blocked_range3d<size_t>(0, densityVoxel.size(), 0, densityVoxel[0].size(), 0, densityVoxel[0][0].size()),
-                      [&](tbb::blocked_range3d<size_t>& r){
-                          for (size_t i = r.pages().begin(); i < r.pages().end(); i++) {
-                              for (size_t j = r.rows().begin(); j < r.rows().end(); j++) {
-                                  for (size_t k = r.cols().begin(); k < r.cols().end(); k++) {
-                                      densityVoxel[i][j][k] = 0;
-                                  }
-                              }
-                          }
-                      });
-
-//    for (int i = 0; i < densityVoxel.size(); i++) {
-//        for (int j = 0; j < densityVoxel[0].size(); j++) {
-//            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
-//                densityVoxel[i][j][k] = 0;
-//            }
-//        }
-//    }
-
-    tbb::parallel_for(tbb::blocked_range3d<size_t>(0, velocityVoxel.size(), 0, velocityVoxel[0].size(), 0, velocityVoxel[0][0].size()),
-                      [&](tbb::blocked_range3d<size_t>& r){
-                          for (size_t i = r.pages().begin(); i < r.pages().end(); i++) {
-                              for (size_t j = r.rows().begin(); j < r.rows().end(); j++) {
-                                  for (size_t k = r.cols().begin(); k < r.cols().end(); k++) {
-                                      velocityVoxel[i][j][k] = Eigen::Vector3d(0, 0, 0);
-                                  }
-                              }
-                          }
-                      });
-
-//    for (int i = 0; i < velocityVoxel.size(); i++) {
-//        for (int j = 0; j < velocityVoxel[0].size(); j++) {
-//            for (int k = 0; k < velocityVoxel[0][0].size(); k++) {
-//                velocityVoxel[i][j][k] = Eigen::Vector3d(0, 0, 0);
-//            }
-//        }
-//    }
+    for (int i = 0; i < densityVoxel.size(); i++) {
+        for (int j = 0; j < densityVoxel[0].size(); j++) {
+            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
+                densityVoxel[i][j][k] = 0;
+            }
+        }
+    }
+    for (int i = 0; i < velocityVoxel.size(); i++) {
+        for (int j = 0; j < velocityVoxel[0].size(); j++) {
+            for (int k = 0; k < velocityVoxel[0][0].size(); k++) {
+                velocityVoxel[i][j][k] = Eigen::Vector3d(0, 0, 0);
+            }
+        }
+    }
 
 }
 

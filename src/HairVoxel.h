@@ -8,7 +8,6 @@
 #include <vector>
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Dense>
-#include <tbb/concurrent_vector.h>
 
 class Particle;
 
@@ -31,8 +30,8 @@ private:
     double zMax;
     double voxelSize;
     int voxelCount;
-    tbb::concurrent_vector<tbb::concurrent_vector<tbb::concurrent_vector<double>>> densityVoxel;
-    tbb::concurrent_vector<tbb::concurrent_vector<tbb::concurrent_vector<Eigen::Vector3d>>> velocityVoxel;
+    std::vector<std::vector<std::vector<double>>> densityVoxel;
+    std::vector<std::vector<std::vector<Eigen::Vector3d>>> velocityVoxel;
 };
 
 
