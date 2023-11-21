@@ -146,23 +146,48 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
 //        }
 //    }
 
-    for (int i = 0; i < strands.size(); i++) {
-        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
-        for (int j = 0; j < particles.size(); j++) {
-            std::shared_ptr<Particle> particle = particles[j];
-            if (particle->fixed) continue;
-            hairVoxel->addParticleDensity(particle);
-        }
-    }
+    tbb::parallel_for(tbb::blocked_range2d<size_t>(0, strands.size(), 0, strands[0]->getParticles().size()),
+            [&](tbb::blocked_range2d<size_t>& r){
+                for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
+                    std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+                    for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
+                        std::shared_ptr<Particle> particle = particles[j];
+                        if (particle->fixed) continue;
+                        hairVoxel->addParticleDensity(particle);
+                    }
+                }
+    });
+
+//    for (int i = 0; i < strands.size(); i++) {
+//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            hairVoxel->addParticleDensity(particle);
+//        }
+//    }
 //    hairVoxel->buildDensity();
-    for (int i = 0; i < strands.size(); i++) {
-        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
-        for (int j = 0; j < particles.size(); j++) {
-            std::shared_ptr<Particle> particle = particles[j];
-            if (particle->fixed) continue;
-            hairVoxel->addParticleVelocity(particle);
-        }
-    }
+
+    tbb::parallel_for(tbb::blocked_range2d<size_t>(0, strands.size(), 0, strands[0]->getParticles().size()),
+                      [&](tbb::blocked_range2d<size_t>& r){
+                          for (size_t i = r.rows().begin(); i < r.rows().end(); i++) {
+                              std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+                              for (size_t j = r.cols().begin(); j < r.cols().end(); j++) {
+                                  std::shared_ptr<Particle> particle = particles[j];
+                                  if (particle->fixed) continue;
+                                  hairVoxel->addParticleVelocity(particle);
+                              }
+                          }
+                      });
+
+//    for (int i = 0; i < strands.size(); i++) {
+//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            hairVoxel->addParticleVelocity(particle);
+//        }
+//    }
     // handle friction
     tbb::parallel_for((size_t)0, strands.size(), [=](int i){
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();

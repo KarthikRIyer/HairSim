@@ -38,7 +38,7 @@ void Scene::load(const string &RESOURCE_DIR)
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4);
+    hair = std::make_shared<Hair>(20, 100, 0.8, 0.4);
     sphereShape->init();
 }
 
