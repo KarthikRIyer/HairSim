@@ -38,7 +38,7 @@ void Scene::load(const string &RESOURCE_DIR)
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4);
+    hair = std::make_shared<Hair>(20, 1, 0.8, 0.4);
     sphereShape->init();
 }
 
@@ -60,11 +60,11 @@ void Scene::step()
 	t += h;
 
     // Move the sphere
-    if(!spheres.empty()) {
-        auto s = spheres.front();
-        Vector3d x0 = s->x;
-        s->x(2) = 0.5 * sin(0.5*t);
-    }
+//    if(!spheres.empty()) {
+//        auto s = spheres.front();
+//        Vector3d x0 = s->x;
+//        s->x(2) = 0.5 * sin(0.5*t);
+//    }
 
 	// Simulate the hair
 	hair->step(h, grav, spheres);

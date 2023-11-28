@@ -19,7 +19,7 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     dirs.resize(strandCount);
     double angleInc = (2*M_PI)/strandCount;
     for (int i = 0; i < strandCount; i++) {
-        double angle = i*angleInc;
+        double angle = i*angleInc + (M_PI*0.5);
         Eigen::Vector3d dir(sin(angle),0,cos(angle));
         dirs[i] = dir;
     }
@@ -57,6 +57,9 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         }
 
         // solve constraint
+//        for (int iter = 0; iter < 2; iter++) {
+//
+//        }
         for (int j = 1; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle0 = particles[j-1];
             std::shared_ptr<Particle> particle1 = particles[j];
@@ -65,6 +68,17 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
             dir.normalize();
             particle1->xTemp = particle0->xTemp + dir * segmentLength; // maintain inextensibility
             particle1->d = particle1Pos - particle1->xTemp; // correction vector
+
+//            for (int k = 0; k < spheres.size(); k++) {
+//                bool collision = handleCollision(spheres[k], particle1, 50.0);
+//                if (collision) {
+//                    Eigen::Vector3d collisionDir = particle1->xTemp - particle0->xTemp;
+//                    collisionDir.normalize();
+//                    particle1->xTemp = particle0->xTemp + collisionDir * segmentLength;
+//                    particle1->d = particle1Pos - particle1->xTemp; // correction vector
+//                }
+//            }
+
         }
         for (int j = 1; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle0 = particles[j-1];
@@ -191,11 +205,11 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
 }
 
 bool Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
-    Eigen::Vector3d dist = dynamicParticle->x - object->x;
+    Eigen::Vector3d dist = dynamicParticle->xTemp - object->x;
     double distNorm = dist.norm();
     if (distNorm < object->r + dynamicParticle->r) {
         Eigen::Vector3d tVec = (dist/distNorm) * (object->r + dynamicParticle->r - distNorm);
-//        dynamicParticle->x += tVec;
+//        dynamicParticle->xTemp += tVec;
                 dynamicParticle->f += kc * tVec;
         return true;
     }
