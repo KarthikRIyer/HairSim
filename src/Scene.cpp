@@ -58,7 +58,14 @@ void Scene::reset()
 void Scene::step()
 {
 	t += h;
-	
+
+    // Move the sphere
+    if(!spheres.empty()) {
+        auto s = spheres.front();
+        Vector3d x0 = s->x;
+        s->x(2) = 0.5 * sin(0.5*t);
+    }
+
 	// Simulate the hair
 	hair->step(h, grav, spheres);
 }

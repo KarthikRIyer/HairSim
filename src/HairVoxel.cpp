@@ -205,6 +205,10 @@ Eigen::Vector3d HairVoxel::getGradient(const Eigen::Vector3d& pos) {
 
 void HairVoxel::draw() {
     glColor3f(0.8, 0.8,0.8);
+    glPointSize(10);
+    glBegin(GL_POINTS);
+    glVertex3d(0.0, 0.0, 1.0); // debug drawing to show positive z direction
+    glEnd();
     for (int i = 0; i < densityVoxel.size(); i++) {
         for (int j = 0; j < densityVoxel[0].size(); j++) {
             for (int k = 0; k < densityVoxel[0][0].size(); k++) {
@@ -214,7 +218,7 @@ void HairVoxel::draw() {
                 double density = densityVoxel[i][j][k];
 //                glColor3f(density, density, density);
                 if (density == 0) continue;
-                glPointSize(density);
+                glPointSize(density*2);
                 glBegin(GL_POINTS);
                 glVertex3d(x, y, z);
 //                std::cout<<"x: "<<x<<" y: "<<y<<" z: "<<z<<"\n";

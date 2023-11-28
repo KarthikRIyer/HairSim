@@ -10,9 +10,10 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     strands.clear();
     strands.resize(strandCount);
     segmentLength = hairLength / (particleCount - 1);
-
-    hairVoxel = std::make_shared<HairVoxel>(-hairLength - 0.1, -hairLength - 0.1, -hairLength - 0.1,
-                                            segmentLength/2, particleCount*5);
+    double voxelSize = 0.5 * segmentLength;
+    double coordMin = -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
+                                            voxelSize, particleCount*5);
 
     std::vector<Eigen::Vector3d> dirs;
     dirs.resize(strandCount);
@@ -150,7 +151,7 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
-            if (particle->fixed) continue;
+//            if (particle->fixed) continue;
             hairVoxel->addParticleDensity(particle);
         }
     }
@@ -159,7 +160,7 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
-            if (particle->fixed) continue;
+//            if (particle->fixed) continue;
             hairVoxel->addParticleVelocity(particle);
         }
     }
