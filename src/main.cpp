@@ -35,6 +35,7 @@ string RESOURCE_DIR = ""; // Where the resources are loaded from
 shared_ptr<Camera> camera;
 shared_ptr<Program> prog;
 shared_ptr<Program> progSimple;
+shared_ptr<Program> progHair;
 shared_ptr<Scene> scene;
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
@@ -109,6 +110,15 @@ static void init()
 	progSimple->addUniform("P");
 	progSimple->addUniform("MV");
 	progSimple->setVerbose(false);
+
+    progHair = make_shared<Program>();
+    progHair->setShaderNames(RESOURCE_DIR + "hair_vert.glsl", RESOURCE_DIR + "hair_frag.glsl");
+    progHair->setVerbose(true); // Set this to true when debugging.
+    progHair->init();
+    progHair->addUniform("P");
+    progHair->addUniform("MV");
+    progHair->addAttribute("aPos");
+    progHair->setVerbose(false);
 	
 	prog = make_shared<Program>();
 	prog->setVerbose(true); // Set this to true when debugging.
@@ -208,16 +218,20 @@ void render()
 	glVertex3f(x1, 0.0f, z1);
 	glVertex3f(x0, 0.0f, z1);
 	glEnd();
-//	progSimple->unbind();
+	progSimple->unbind();
 
 	// Draw scene
 //	prog->bind();
 //	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
 //	MV->pushMatrix();
-	scene->drawHair();
+    progHair->bind();
+    glUniformMatrix4fv(progHair->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
+    glUniformMatrix4fv(progHair->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+	scene->drawHair(progHair);
+    progHair->unbind();
 //	MV->popMatrix();
 //	prog->unbind();
-    progSimple->unbind();
+//    progSimple->unbind();
 
     prog->bind();
 	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));

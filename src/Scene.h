@@ -31,7 +31,7 @@ public:
 	void step();
 	
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
-	void drawHair() const;
+	void drawHair(const std::shared_ptr<Program> progHair) const;
 
 	double getTime() const { return t; }
 	

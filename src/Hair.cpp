@@ -4,6 +4,7 @@
 
 #include "Hair.h"
 #include "Particle.h"
+#include "GLSL.h"
 #include <tbb/tbb.h>
 
 Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): particleCount(particleCount), strandCount(strandCount) {
@@ -24,9 +25,31 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
         dirs[i] = dir;
     }
 
+    posBuf.clear();
+    eleBuf.clear();
+    posBuf.resize(strandCount * particleCount * 3);
+    eleBuf.resize(strandCount * particleCount * 2);
+
     for (int i = 0; i < strandCount; i++) {
         std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0, 0), dirs[i]);
         strands[i] = strand;
+    }
+    int posBufIndex = 0;
+    int eleBufIndex = 0;
+    int particleIndex = -1;
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            posBuf[posBufIndex++] = particle->x.x();
+            posBuf[posBufIndex++] = particle->x.y();
+            posBuf[posBufIndex++] = particle->x.z();
+            if (j != 0) {
+                eleBuf[eleBufIndex++] = particleIndex;
+                eleBuf[eleBufIndex++] = particleIndex+1;
+            }
+            particleIndex++;
+        }
     }
 }
 
@@ -201,6 +224,16 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
 //            particle->v += (sRepulsion*-grad)/h;
 //        }
 //    }
+    int posBufIndex = 0;
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            posBuf[posBufIndex++] = particle->x.x();
+            posBuf[posBufIndex++] = particle->x.y();
+            posBuf[posBufIndex++] = particle->x.z();
+        }
+    }
 
 }
 
@@ -217,18 +250,65 @@ bool Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Par
 }
 
 void Hair::init() {
+// Send the position array to the GPU
+    glGenBuffers(1, &posBufID);
+    glBindBuffer(GL_ARRAY_BUFFER, posBufID);
+    glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_STATIC_DRAW);
 
+    glGenBuffers(1, &eleBufID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, eleBuf.size()*sizeof(unsigned int), &eleBuf[0], GL_STATIC_DRAW);
+    // Unbind the arrays
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    GLSL::checkError(GET_FILE_LINE);
 }
 
 void Hair::reset() {
     for (int i = 0; i < strands.size(); i++) {
         strands[i]->reset();
     }
+    int posBufIndex = 0;
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        for (int j = 0; j < particles.size(); j++) {
+            std::shared_ptr<Particle> particle = particles[j];
+            posBuf[posBufIndex++] = particle->x.x();
+            posBuf[posBufIndex++] = particle->x.y();
+            posBuf[posBufIndex++] = particle->x.z();
+        }
+    }
 }
 
-void Hair::draw() {
-    for (int i = 0; i<strands.size();i++) {
-        strands[i]->draw();
-    }
+void Hair::draw(const std::shared_ptr<Program> prog) {
+    GLSL::checkError(GET_FILE_LINE);
+    // Bind position buffer
+    int h_pos = prog->getAttribute("aPos");
+    glEnableVertexAttribArray(h_pos);
+    glBindBuffer(GL_ARRAY_BUFFER, posBufID);
+    glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glPointSize(5.0);
+    int count = (int)posBuf.size()/3; // number of indices to be rendered
+    glDrawArrays(GL_POINTS , 0, count);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
+
+    // Draw
+    glColor3f(0.8f, 0.8f, 0.8f);
+    glLineWidth(2.0);
+//    int count = (int)posBuf.size()/3; // number of indices to be rendered
+//    glDrawArrays(GL_LINE_STRIP , 0, count);
+    glDrawElements(GL_LINES, eleBuf.size(), GL_UNSIGNED_INT, (const void *)0);
+
+    glDisableVertexAttribArray(h_pos);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    GLSL::checkError(GET_FILE_LINE);
+//    for (int i = 0; i<strands.size();i++) {
+//        strands[i]->draw();
+//    }
 //    hairVoxel->draw();
 }
