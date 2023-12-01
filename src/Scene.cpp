@@ -31,8 +31,8 @@ void Scene::load(const string &RESOURCE_DIR)
 
     auto sphere = make_shared<Particle>(sphereShape);
     spheres.push_back(sphere);
-    sphere->r = 0.1;
-    sphere->x = Vector3d(0.0, -0.3, 0.0);
+    sphere->r = 0.13;
+    sphere->x = Vector3d(0.0, 0.04, -0.01);
 
 }
 
@@ -61,11 +61,11 @@ void Scene::step()
 	t += h;
 
     // Move the sphere
-    if(!spheres.empty()) {
-        auto s = spheres.front();
-        Vector3d x0 = s->x;
-        s->x(2) = 0.5 * sin(0.5*t);
-    }
+//    if(!spheres.empty()) {
+//        auto s = spheres.front();
+//        Vector3d x0 = s->x;
+//        s->x(2) = 0.5 * sin(0.5*t);
+//    }
 
 	// Simulate the hair
 	hair->step(h, grav, spheres);

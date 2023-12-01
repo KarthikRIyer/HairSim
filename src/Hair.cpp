@@ -31,7 +31,7 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     eleBuf.resize(strandCount * particleCount * 2);
 
     for (int i = 0; i < strandCount; i++) {
-        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0, 0), dirs[i]);
+        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0.175, -0.01), dirs[i]);
         strands[i] = strand;
     }
     int posBufIndex = 0;
@@ -58,7 +58,7 @@ Hair::~Hair() {}
 void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
     double sDamping = 0.9;
     double sFriction = 0.1;
-//    double sRepulsion = 0.00000;
+//    double sRepulsion = 0.000000;
     double sRepulsion = 0.00005;
     hairVoxel->reset();
 
@@ -283,7 +283,7 @@ void Hair::reset() {
 void Hair::draw(const std::shared_ptr<Program> prog) {
     GLSL::checkError(GET_FILE_LINE);
     // Bind position buffer
-    int h_pos = prog->getAttribute("aPos");
+     int h_pos = prog->getAttribute("aPos");
     glEnableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
     glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);

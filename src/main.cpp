@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #ifndef _GLIBCXX_USE_NANOSLEEP
@@ -23,20 +24,35 @@
 #include "MatrixStack.h"
 #include "Shape.h"
 #include "Scene.h"
+#include "Texture.h"
 
 using namespace std;
 using namespace Eigen;
+
+// Stores information in data/input.txt
+class DataInput
+{
+public:
+    vector<string> textureData;
+    vector< vector<string> > meshData;
+};
+
+DataInput dataInput;
 
 bool keyToggles[256] = {false}; // only for English keyboards!
 
 GLFWwindow *window; // Main application window
 string RESOURCE_DIR = ""; // Where the resources are loaded from
+string DATA_DIR = ""; // where the data are loaded from
 
 shared_ptr<Camera> camera;
 shared_ptr<Program> prog;
 shared_ptr<Program> progSimple;
 shared_ptr<Program> progHair;
+shared_ptr<Program> progMesh;
 shared_ptr<Scene> scene;
+vector< shared_ptr<Shape> > shapes;
+map< string, shared_ptr<Texture> > textureMap;
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
@@ -94,7 +110,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 static void init()
 {
 	GLSL::checkVersion();
-	
+
+    // Create shapes
+    for(const auto &mesh : dataInput.meshData) {
+        auto shape = make_shared<Shape>();
+        shapes.push_back(shape);
+        shape->loadMesh(DATA_DIR + mesh[0]);
+        shape->setTextureFilename(mesh[1]);
+        shape->init();
+    }
+
 	// Set background color
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	// Enable z-buffer test
@@ -110,6 +135,36 @@ static void init()
 	progSimple->addUniform("P");
 	progSimple->addUniform("MV");
 	progSimple->setVerbose(false);
+
+    progMesh = make_shared<Program>();
+    progMesh->setShaderNames(RESOURCE_DIR + "phongmodel_vert.glsl", RESOURCE_DIR + "phongmodel_frag.glsl");
+    progMesh->setVerbose(true); // Set this to true when debugging.
+    progMesh->init();
+    progMesh->addAttribute("aPos");
+    progMesh->addAttribute("aNor");
+    progMesh->addAttribute("aTex");
+    progMesh->addUniform("P");
+    progMesh->addUniform("MV");
+    progMesh->addUniform("ka");
+    progMesh->addUniform("ks");
+    progMesh->addUniform("s");
+    progMesh->addUniform("kdTex");
+    progMesh->setVerbose(false);
+
+    // Bind the texture to unit 1.
+    int unit = 1;
+    progMesh->bind();
+    glUniform1i(progMesh->getUniform("kdTex"), unit);
+    progMesh->unbind();
+
+    for(const auto &filename : dataInput.textureData) {
+        auto textureKd = make_shared<Texture>();
+        textureMap[filename] = textureKd;
+        textureKd->setFilename(DATA_DIR + filename);
+        textureKd->init();
+        textureKd->setUnit(unit); // Bind to unit 1
+        textureKd->setWrapModes(GL_REPEAT, GL_REPEAT);
+    }
 
     progHair = make_shared<Program>();
     progHair->setShaderNames(RESOURCE_DIR + "hair_vert.glsl", RESOURCE_DIR + "hair_frag.glsl");
@@ -239,6 +294,25 @@ void render()
     scene->draw(MV, prog);
 	MV->popMatrix();
 	prog->unbind();
+
+	// draw mesh
+    progMesh->bind();
+    for(const auto &shape : shapes) {
+        MV->pushMatrix();
+        MV->scale(0.1);
+        MV->translate(0.0, -18.5, 0.0);
+        textureMap[shape->getTextureFilename()]->bind(prog->getUniform("kdTex"));
+        glLineWidth(1.0f); // for wireframe
+        glUniformMatrix4fv(progMesh->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
+        glUniformMatrix4fv(progMesh->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+        glUniform3f(progMesh->getUniform("ka"), 0.1f, 0.1f, 0.1f);
+        glUniform3f(progMesh->getUniform("ks"), 0.1f, 0.1f, 0.1f);
+        glUniform1f(progMesh->getUniform("s"), 200.0f);
+        shape->setProgram(progMesh);
+        shape->draw();
+        MV->popMatrix();
+    }
+    progMesh->unbind();
 	
 	//////////////////////////////////////////////////////
 	// Cleanup
@@ -275,14 +349,62 @@ void stepperFunc()
 	}
 }
 
+void loadDataInputFile()
+{
+    string filename = DATA_DIR + "input.txt";
+    ifstream in;
+    in.open(filename);
+    if(!in.good()) {
+        cout << "Cannot read " << filename << endl;
+        return;
+    }
+    cout << "Loading " << filename << endl;
+
+    string line;
+    while(1) {
+        getline(in, line);
+        if(in.eof()) {
+            break;
+        }
+        if(line.empty()) {
+            continue;
+        }
+        // Skip comments
+        if(line.at(0) == '#') {
+            continue;
+        }
+        // Parse lines
+        string key, value;
+        stringstream ss(line);
+        // key
+        ss >> key;
+        if(key.compare("TEXTURE") == 0) {
+            ss >> value;
+            dataInput.textureData.push_back(value);
+        } else if(key.compare("MESH") == 0) {
+            vector<string> mesh;
+            ss >> value;
+            mesh.push_back(value); // obj
+            ss >> value;
+            mesh.push_back(value); // texture
+            dataInput.meshData.push_back(mesh);
+        } else {
+            cout << "Unkown key word: " << key << endl;
+        }
+    }
+    in.close();
+}
+
 int main(int argc, char **argv)
 {
-	if(argc < 2) {
-		cout << "Please specify the resource directory." << endl;
+	if(argc < 3) {
+		cout << "Please specify the resource and data directory." << endl;
 		return 0;
 	}
 	RESOURCE_DIR = argv[1] + string("/");
-	
+    DATA_DIR = argv[2] + string("/");
+    loadDataInputFile();
+
 	// Set error callback.
 	glfwSetErrorCallback(error_callback);
 	// Initialize the library.
