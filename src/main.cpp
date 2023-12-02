@@ -299,8 +299,8 @@ void render()
     progMesh->bind();
     for(const auto &shape : shapes) {
         MV->pushMatrix();
-        MV->scale(0.1);
-        MV->translate(0.0, -18.5, 0.0);
+//        MV->scale(0.1);
+//        MV->translate(0.0, -18.5, 0.0);
         textureMap[shape->getTextureFilename()]->bind(prog->getUniform("kdTex"));
         glLineWidth(1.0f); // for wireframe
         glUniformMatrix4fv(progMesh->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));

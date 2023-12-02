@@ -32,7 +32,7 @@ void Scene::load(const string &RESOURCE_DIR)
     auto sphere = make_shared<Particle>(sphereShape);
     spheres.push_back(sphere);
     sphere->r = 0.13;
-    sphere->x = Vector3d(0.0, 0.04, -0.01);
+    sphere->x = Vector3d(0.0, 0.377, -0.02);
 
 }
 

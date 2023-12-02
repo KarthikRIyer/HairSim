@@ -31,7 +31,7 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength): 
     eleBuf.resize(strandCount * particleCount * 2);
 
     for (int i = 0; i < strandCount; i++) {
-        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0.175, -0.01), dirs[i]);
+        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0.51, -0.02), dirs[i]);
         strands[i] = strand;
     }
     int posBufIndex = 0;
