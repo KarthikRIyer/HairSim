@@ -15,16 +15,17 @@ class Particle;
 class MatrixStack;
 class Program;
 class Shape;
+class Texture;
 
 class Scene
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	Scene(std::string hairGenMesh);
+	Scene();
 	virtual ~Scene();
-	
-	void load(const std::string &RESOURCE_DIR);
+
+	void load(const std::string &RESOURCE_DIR, const std::string &DATA_DIR, int texUnit);
 	void init();
 	void tare();
 	void reset();
@@ -45,6 +46,14 @@ private:
 
 	std::shared_ptr<Shape> sphereShape;
 	std::vector< std::shared_ptr<Particle> > spheres;
+
+    std::vector<std::shared_ptr<Shape> > shapes;
+    std::map<std::string, std::shared_ptr<Texture>> textureMap;
+
+    std::vector<std::string> textureData;
+    std::vector<std::vector<std::string>> meshData;
+
+    void loadDataInputFile(const std::string &DATA_DIR);
 };
 
 #endif
