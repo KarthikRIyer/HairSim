@@ -138,6 +138,26 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 
     double voxelSize = 0.5 * segmentLength;
 
+//    double maxX = std::max(std::abs(xmin), std::abs(xmax));
+//    double maxY = std::max(std::abs(ymin), std::abs(ymax));
+//    double maxZ = std::max(std::abs(zmin), std::abs(zmax));
+//
+//    double minX = std::min(-std::abs(xmin), -std::abs(xmax));
+//    double minY = std::min(-std::abs(ymin), -std::abs(ymax));
+//    double minZ = std::min(-std::abs(zmin), -std::abs(zmax));
+//
+//    double maxCoord = std::max(maxX, std::max(maxY, maxZ));
+//    double minCoord = std::min(minX, std::min(minY, minZ));
+////    double coordMin = -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    double coordMin = minCoord -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    double coordMax = maxCoord +(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    int voxelCount = ((coordMax - coordMin)/voxelSize) + 1;
+//
+////    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
+////                                            voxelSize, particleCount*5);
+//    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
+//                                            voxelSize, voxelCount*2);
+
     Eigen::Vector3d pymax(0,std::numeric_limits<double>::min(), 0);
     Eigen::Vector3d pymaxroot(0,0,0);
     Eigen::Vector3d pymin(0,std::numeric_limits<double>::max(), 0);
@@ -242,6 +262,60 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
             }
         }
     });
+
+//    for (int i = 0; i < strands.size(); i++) {
+//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+//        // accumulate forces
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            particle->f += particle->m * grav;
+//        }
+//        // update velocity and temp pos
+//        for (int j = 0; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle = particles[j];
+//            if (particle->fixed) continue;
+//            particle->v = particle->v + h * (particle->f / particle->m);
+//            particle->xTemp = particle->x + particle->v * h + particle->f * h * h;
+//            particle->f = Eigen::Vector3d(0, 0, 0);
+//        }
+//
+//        // solve constraint
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            Eigen::Vector3d particle1Pos = particle1->xTemp;
+//            Eigen::Vector3d dir = particle1->xTemp - particle0->xTemp;
+//            dir.normalize();
+//            particle1->xTemp = particle0->xTemp + dir * segmentLength; // maintain inextensibility
+//            particle1->d = particle1Pos - particle1->xTemp; // correction vector
+//        }
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            if (particle0->fixed) continue;
+//
+//            particle0->v = ((particle0->xTemp - particle0->x)/h) + sDamping * (particle1->d/h);
+//            particle0->x = particle0->xTemp;
+//        }
+//        std::shared_ptr<Particle> lastParticle = particles[particles.size()-1]; // no damping for last particle
+//        lastParticle->v = (lastParticle->xTemp - lastParticle->x)/h;
+//        lastParticle->x = lastParticle->xTemp;
+//
+//        for (int j = 1; j < particles.size(); j++) {
+//            std::shared_ptr<Particle> particle1 = particles[j];
+//            std::shared_ptr<Particle> particle0 = particles[j-1];
+//            if (particle1->fixed) continue;
+//            for (int k = 0; k < spheres.size(); k++) {
+//                bool collision = handleCollision(spheres[k], particle1, 50.0);
+//                if (collision) {
+////                    Eigen::Vector3d dir = particle1->x - particle0->x;
+////                    dir.normalize();
+////                    particle1->x = particle0->x + dir * segmentLength;
+//                }
+//            }
+//        }
+//    }
 
     for (int i = 0; i < strands.size(); i++) {
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();

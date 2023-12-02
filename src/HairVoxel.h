@@ -30,10 +30,8 @@ private:
     double zMax;
     double voxelSize;
     int voxelCount;
-//    std::vector<std::vector<std::vector<double>>> densityVoxel;
-//    std::vector<std::vector<std::vector<Eigen::Vector3d>>> velocityVoxel;
-    std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, double>>> densityVoxel;
-    std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, Eigen::Vector3d>>> velocityVoxel;
+    std::vector<std::vector<std::vector<double>>> densityVoxel;
+    std::vector<std::vector<std::vector<Eigen::Vector3d>>> velocityVoxel;
 };
 
 
