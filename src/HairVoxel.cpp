@@ -14,13 +14,16 @@ zMin(zMin), voxelSize(voxelSize), voxelCount(voxelCount) {
     yMax = yMin + voxelCount * voxelSize;
     zMax = zMin + voxelCount * voxelSize;
 
-    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
-                                                                 std::vector<std::vector<double>>(voxelCount,
-                                                                         std::vector<double>(voxelCount, 0)));
+//    densityVoxel = std::vector<std::vector<std::vector<double>>>(voxelCount,
+//                                                                 std::vector<std::vector<double>>(voxelCount,
+//                                                                         std::vector<double>(voxelCount, 0)));
+//
+//    velocityVoxel = std::vector<std::vector<std::vector<Eigen::Vector3d>>>(voxelCount,
+//                                                                 std::vector<std::vector<Eigen::Vector3d>>(voxelCount,
+//                                                                                                  std::vector<Eigen::Vector3d>(voxelCount, Eigen::Vector3d(0, 0, 0))));
 
-    velocityVoxel = std::vector<std::vector<std::vector<Eigen::Vector3d>>>(voxelCount,
-                                                                 std::vector<std::vector<Eigen::Vector3d>>(voxelCount,
-                                                                                                  std::vector<Eigen::Vector3d>(voxelCount, Eigen::Vector3d(0, 0, 0))));
+    densityVoxel.clear();
+    velocityVoxel.clear();
 }
 
 void HairVoxel::reset() {
@@ -28,21 +31,36 @@ void HairVoxel::reset() {
 //                                                                 std::vector<std::vector<double>>(voxelCount,
 //                                                                                                  std::vector<double>(voxelCount, 0)));
 
-    for (int i = 0; i < densityVoxel.size(); i++) {
-        for (int j = 0; j < densityVoxel[0].size(); j++) {
-            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
-                densityVoxel[i][j][k] = 0;
-            }
-        }
-    }
-    for (int i = 0; i < velocityVoxel.size(); i++) {
-        for (int j = 0; j < velocityVoxel[0].size(); j++) {
-            for (int k = 0; k < velocityVoxel[0][0].size(); k++) {
-                velocityVoxel[i][j][k] = Eigen::Vector3d(0, 0, 0);
-            }
-        }
-    }
+//    for (int i = 0; i < densityVoxel.size(); i++) {
+//        for (int j = 0; j < densityVoxel[0].size(); j++) {
+//            for (int k = 0; k < densityVoxel[0][0].size(); k++) {
+//                densityVoxel[i][j][k] = 0;
+//            }
+//        }
+//    }
+//    for (int i = 0; i < velocityVoxel.size(); i++) {
+//        for (int j = 0; j < velocityVoxel[0].size(); j++) {
+//            for (int k = 0; k < velocityVoxel[0][0].size(); k++) {
+//                velocityVoxel[i][j][k] = Eigen::Vector3d(0, 0, 0);
+//            }
+//        }
+//    }
 
+    densityVoxel.clear();
+    velocityVoxel.clear();
+
+}
+
+bool checkIfAbsent(std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, double>>> &densityVoxel, int x, int y, int z) {
+    return densityVoxel.find(x) == densityVoxel.end() ||
+            densityVoxel.find(x)->second.find(y) == densityVoxel.find(x)->second.end() ||
+            densityVoxel.find(x)->second.find(y)->second.find(z) == densityVoxel.find(x)->second.find(y)->second.end();
+}
+
+bool checkIfAbsent(std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, Eigen::Vector3d>>> &velocityVoxel, int x, int y, int z) {
+    return velocityVoxel.find(x) == velocityVoxel.end() ||
+            velocityVoxel.find(x)->second.find(y) == velocityVoxel.find(x)->second.end() ||
+            velocityVoxel.find(x)->second.find(y)->second.find(z) == velocityVoxel.find(x)->second.find(y)->second.end();
 }
 
 void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
@@ -65,6 +83,15 @@ void HairVoxel::addParticleDensity(const std::shared_ptr<Particle>& particle) {
     int z1Index = z0Index+1;
     double z0 = zMin + z0Index*voxelSize;
     double z1 = zMin + z1Index*voxelSize;
+
+    if (checkIfAbsent(densityVoxel, x0Index, y0Index, z0Index)) densityVoxel[x0Index][y0Index][z0Index] = 0;
+    if (checkIfAbsent(densityVoxel, x0Index, y0Index, z1Index)) densityVoxel[x0Index][y0Index][z1Index] = 0;
+    if (checkIfAbsent(densityVoxel, x0Index, y1Index, z0Index)) densityVoxel[x0Index][y1Index][z0Index] = 0;
+    if (checkIfAbsent(densityVoxel, x1Index, y0Index, z0Index)) densityVoxel[x1Index][y0Index][z0Index] = 0;
+    if (checkIfAbsent(densityVoxel, x1Index, y1Index, z0Index)) densityVoxel[x1Index][y1Index][z0Index] = 0;
+    if (checkIfAbsent(densityVoxel, x0Index, y1Index, z1Index)) densityVoxel[x0Index][y1Index][z1Index] = 0;
+    if (checkIfAbsent(densityVoxel, x1Index, y0Index, z1Index)) densityVoxel[x1Index][y0Index][z1Index] = 0;
+    if (checkIfAbsent(densityVoxel, x1Index, y1Index, z1Index)) densityVoxel[x1Index][y1Index][z1Index] = 0;
 
     densityVoxel[x0Index][y0Index][z0Index] += ((1.0 - abs(p.x() - x0))*(1.0 - abs(p.y() - y0))*(1.0 - abs(p.z() - z0)));
     densityVoxel[x0Index][y0Index][z1Index] += ((1.0 - abs(p.x() - x0))*(1.0 - abs(p.y() - y0))*(1.0 - abs(p.z() - z1)));
@@ -112,6 +139,15 @@ void HairVoxel::addParticleVelocity(const std::shared_ptr<Particle>& particle) {
     double z0 = zMin + z0Index*voxelSize;
     double z1 = zMin + z1Index*voxelSize;
 
+    if (checkIfAbsent(velocityVoxel, x0Index, y0Index, z0Index)) velocityVoxel[x0Index][y0Index][z0Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x0Index, y0Index, z1Index)) velocityVoxel[x0Index][y0Index][z1Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x0Index, y1Index, z0Index)) velocityVoxel[x0Index][y1Index][z0Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x1Index, y0Index, z0Index)) velocityVoxel[x1Index][y0Index][z0Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x1Index, y1Index, z0Index)) velocityVoxel[x1Index][y1Index][z0Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x0Index, y1Index, z1Index)) velocityVoxel[x0Index][y1Index][z1Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x1Index, y0Index, z1Index)) velocityVoxel[x1Index][y0Index][z1Index] = Eigen::Vector3d(0,0,0);
+    if (checkIfAbsent(velocityVoxel, x1Index, y1Index, z1Index)) velocityVoxel[x1Index][y1Index][z1Index] = Eigen::Vector3d(0,0,0);
+
     velocityVoxel[x0Index][y0Index][z0Index] += (((1.0 - abs(p.x() - x0))*(1.0 - abs(p.y() - y0))*(1.0 - abs(p.z() - z0))) * particle->v)/densityVoxel[x0Index][y0Index][z0Index];
     velocityVoxel[x0Index][y0Index][z1Index] += (((1.0 - abs(p.x() - x0))*(1.0 - abs(p.y() - y0))*(1.0 - abs(p.z() - z1))) * particle->v)/densityVoxel[x0Index][y0Index][z1Index];
     velocityVoxel[x0Index][y1Index][z0Index] += (((1.0 - abs(p.x() - x0))*(1.0 - abs(p.y() - y1))*(1.0 - abs(p.z() - z0))) * particle->v)/densityVoxel[x0Index][y1Index][z0Index];
@@ -142,12 +178,30 @@ Eigen::Vector3d HairVoxel::getGridVelocity(const Eigen::Vector3d& pos) {
     double yu = (pos.y() - y0)/(voxelSize);
     double zu = (pos.z() - z0)/(voxelSize);
 
-    Eigen::Vector3d blx0 = (1-xu)*velocityVoxel[x0Index][y0Index][z0Index] + (xu)*velocityVoxel[x1Index][y0Index][z0Index];
-    Eigen::Vector3d blx1 = (1-xu)*velocityVoxel[x0Index][y1Index][z0Index] + (xu)*velocityVoxel[x1Index][y1Index][z0Index];
+    Eigen::Vector3d velocityX0Y0Z0 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x0Index, y0Index, z0Index)) velocityX0Y0Z0 = velocityVoxel[x0Index][y0Index][z0Index];
+    Eigen::Vector3d velocityX1Y0Z0 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x1Index, y0Index, z0Index)) velocityX1Y0Z0 = velocityVoxel[x1Index][y0Index][z0Index];
+    Eigen::Vector3d velocityX0Y1Z0 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x0Index, y1Index, z0Index)) velocityX0Y1Z0 = velocityVoxel[x0Index][y1Index][z0Index];
+    Eigen::Vector3d velocityX1Y1Z0 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x1Index, y1Index, z0Index)) velocityX1Y1Z0 = velocityVoxel[x1Index][y1Index][z0Index];
+
+    Eigen::Vector3d blx0 = (1-xu)*velocityX0Y0Z0 + (xu)*velocityX1Y0Z0;
+    Eigen::Vector3d blx1 = (1-xu)*velocityX0Y1Z0 + (xu)*velocityX1Y1Z0;
     Eigen::Vector3d blz0 = (1-yu)*blx0 + (yu)*blx1;
 
-    Eigen::Vector3d blx2 = (1-xu)*velocityVoxel[x0Index][y0Index][z1Index] + (xu)*velocityVoxel[x1Index][y0Index][z1Index];
-    Eigen::Vector3d blx3 = (1-xu)*velocityVoxel[x0Index][y1Index][z1Index] + (xu)*velocityVoxel[x1Index][y1Index][z1Index];
+    Eigen::Vector3d velocityX0Y0Z1 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x0Index, y0Index, z1Index)) velocityX0Y0Z1 = velocityVoxel[x0Index][y0Index][z1Index];
+    Eigen::Vector3d velocityX1Y0Z1 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x1Index, y0Index, z1Index)) velocityX1Y0Z1 = velocityVoxel[x1Index][y0Index][z1Index];
+    Eigen::Vector3d velocityX0Y1Z1 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x0Index, y1Index, z1Index)) velocityX0Y1Z1 = velocityVoxel[x0Index][y1Index][z1Index];
+    Eigen::Vector3d velocityX1Y1Z1 = Eigen::Vector3d(0,0,0);
+    if (!checkIfAbsent(velocityVoxel, x1Index, y1Index, z1Index)) velocityX1Y1Z1 = velocityVoxel[x1Index][y1Index][z1Index];
+
+    Eigen::Vector3d blx2 = (1-xu)*velocityX0Y0Z1 + (xu)*velocityX1Y0Z1;
+    Eigen::Vector3d blx3 = (1-xu)*velocityX0Y1Z1 + (xu)*velocityX1Y1Z1;
     Eigen::Vector3d blz1 = (1-yu)*blx2 + (yu)*blx3;
 
     Eigen::Vector3d gridVel = (1-zu)*blz0 + (zu)*blz1;
@@ -172,29 +226,47 @@ Eigen::Vector3d HairVoxel::getGradient(const Eigen::Vector3d& pos) {
     double zu = (pos.z() - z0)/(voxelSize);
 
     // x grad
-    double blz0 = (1-zu)*densityVoxel[x0Index][y0Index][z0Index] + zu*densityVoxel[x0Index][y0Index][z1Index];
-    double blz1 = (1-zu)*densityVoxel[x0Index][y1Index][z0Index] + zu*densityVoxel[x0Index][y1Index][z1Index];
+    double densityX0Y0Z0 = 0;
+    if (!checkIfAbsent(densityVoxel, x0Index, y0Index, z0Index)) densityX0Y0Z0 = densityVoxel[x0Index][y0Index][z0Index];
+    double densityX0Y0Z1 = 0;
+    if (!checkIfAbsent(densityVoxel, x0Index, y0Index, z1Index)) densityX0Y0Z1 = densityVoxel[x0Index][y0Index][z1Index];
+    double densityX0Y1Z0 = 0;
+    if (!checkIfAbsent(densityVoxel, x0Index, y1Index, z0Index)) densityX0Y1Z0 = densityVoxel[x0Index][y1Index][z0Index];
+    double densityX0Y1Z1 = 0;
+    if (!checkIfAbsent(densityVoxel, x0Index, y1Index, z1Index)) densityX0Y1Z1 = densityVoxel[x0Index][y1Index][z1Index];
+
+    double densityX1Y0Z0 = 0;
+    if (!checkIfAbsent(densityVoxel, x1Index, y0Index, z0Index)) densityX1Y0Z0 = densityVoxel[x1Index][y0Index][z0Index];
+    double densityX1Y0Z1 = 0;
+    if (!checkIfAbsent(densityVoxel, x1Index, y0Index, z1Index)) densityX1Y0Z1 = densityVoxel[x1Index][y0Index][z1Index];
+    double densityX1Y1Z0 = 0;
+    if (!checkIfAbsent(densityVoxel, x1Index, y1Index, z0Index)) densityX1Y1Z0 = densityVoxel[x1Index][y1Index][z0Index];
+    double densityX1Y1Z1 = 0;
+    if (!checkIfAbsent(densityVoxel, x1Index, y1Index, z1Index)) densityX1Y1Z1 = densityVoxel[x1Index][y1Index][z1Index];
+
+    double blz0 = (1-zu)*densityX0Y0Z0 + zu*densityX0Y0Z1;
+    double blz1 = (1-zu)*densityX0Y1Z0 + zu*densityX0Y1Z1;
     double bly0 = (1-yu)*blz0 + yu*blz1;
-    double blz2 = (1-zu)*densityVoxel[x1Index][y0Index][z0Index] + zu*densityVoxel[x1Index][y0Index][z1Index];
-    double blz3 = (1-zu)*densityVoxel[x1Index][y1Index][z0Index] + zu*densityVoxel[x1Index][y1Index][z1Index];
+    double blz2 = (1-zu)*densityX1Y0Z0 + zu*densityX1Y0Z1;
+    double blz3 = (1-zu)*densityX1Y1Z0 + zu*densityX1Y1Z1;
     double bly1 = (1-yu)*blz2 + yu*blz3;
     double xGrad = (bly1 - bly0)/voxelSize;
 
     // y grad
-    blz0 = (1-zu)*densityVoxel[x0Index][y0Index][z0Index] + zu*densityVoxel[x0Index][y0Index][z1Index];
-    blz1 = (1-zu)*densityVoxel[x1Index][y0Index][z0Index] + zu*densityVoxel[x1Index][y0Index][z1Index];
+    blz0 = (1-zu)*densityX0Y0Z0 + zu*densityX0Y0Z1;
+    blz1 = (1-zu)*densityX1Y0Z0 + zu*densityX1Y0Z1;
     double blx0 = (1-xu)*blz0 + xu*blz1;
-    blz2 = (1-zu)*densityVoxel[x0Index][y1Index][z0Index] + zu*densityVoxel[x0Index][y1Index][z1Index];
-    blz3 = (1-zu)*densityVoxel[x1Index][y1Index][z0Index] + zu*densityVoxel[x1Index][y1Index][z1Index];
+    blz2 = (1-zu)*densityX0Y1Z0 + zu*densityX0Y1Z1;
+    blz3 = (1-zu)*densityX1Y1Z0 + zu*densityX1Y1Z1;
     double blx1 = (1-xu)*blz2 + xu*blz3;
     double yGrad = (blx1 - blx0)/voxelSize;
 
     // z grad
-    bly0 = (1-yu)*densityVoxel[x0Index][y0Index][z0Index] + zu*densityVoxel[x0Index][y1Index][z0Index];
-    bly1 = (1-yu)*densityVoxel[x1Index][y0Index][z0Index] + zu*densityVoxel[x1Index][y1Index][z1Index];
+    bly0 = (1-yu)*densityX0Y0Z0 + zu*densityX0Y1Z0;
+    bly1 = (1-yu)*densityX1Y0Z0 + zu*densityX1Y1Z1;
     blx0 = (1-xu)*bly0 + xu*bly1;
-    double bly2 = (1-zu)*densityVoxel[x0Index][y0Index][z1Index] + zu*densityVoxel[x0Index][y1Index][z1Index];
-    double bly3 = (1-zu)*densityVoxel[x1Index][y0Index][z1Index] + zu*densityVoxel[x1Index][y1Index][z1Index];
+    double bly2 = (1-zu)*densityX0Y0Z1 + zu*densityX0Y1Z1;
+    double bly3 = (1-zu)*densityX1Y0Z1 + zu*densityX1Y1Z1;
     blx1 = (1-xu)*bly2 + xu*bly3;
     double zGrad = (blx1 - blx0)/voxelSize;
 
