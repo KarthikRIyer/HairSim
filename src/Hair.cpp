@@ -71,7 +71,7 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
             cz = attrib.vertices[3*idx.vertex_index+2];
             Eigen::Vector3d c(cx, cy, cz);
 
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 3; i++) {
                 float alpha = distr(generator);
                 float beta = distr(generator);
                 if (alpha > beta) {
@@ -138,25 +138,52 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 
     double voxelSize = 0.5 * segmentLength;
 
-    double maxX = std::max(std::abs(xmin), std::abs(xmax));
-    double maxY = std::max(std::abs(ymin), std::abs(ymax));
-    double maxZ = std::max(std::abs(zmin), std::abs(zmax));
-
-    double minX = std::min(-std::abs(xmin), -std::abs(xmax));
-    double minY = std::min(-std::abs(ymin), -std::abs(ymax));
-    double minZ = std::min(-std::abs(zmin), -std::abs(zmax));
-
-    double maxCoord = std::max(maxX, std::max(maxY, maxZ));
-    double minCoord = std::min(minX, std::min(minY, minZ));
-//    double coordMin = -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
-    double coordMin = minCoord -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
-    double coordMax = maxCoord +(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
-    int voxelCount = ((coordMax - coordMin)/voxelSize) + 1;
-
+//    double maxX = std::max(std::abs(xmin), std::abs(xmax));
+//    double maxY = std::max(std::abs(ymin), std::abs(ymax));
+//    double maxZ = std::max(std::abs(zmin), std::abs(zmax));
+//
+//    double minX = std::min(-std::abs(xmin), -std::abs(xmax));
+//    double minY = std::min(-std::abs(ymin), -std::abs(ymax));
+//    double minZ = std::min(-std::abs(zmin), -std::abs(zmax));
+//
+//    double maxCoord = std::max(maxX, std::max(maxY, maxZ));
+//    double minCoord = std::min(minX, std::min(minY, minZ));
+////    double coordMin = -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    double coordMin = minCoord -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    double coordMax = maxCoord +(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+//    int voxelCount = ((coordMax - coordMin)/voxelSize) + 1;
+//
+////    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
+////                                            voxelSize, particleCount*5);
 //    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
-//                                            voxelSize, particleCount*5);
-    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
-                                            voxelSize, voxelCount*2);
+//                                            voxelSize, voxelCount*2);
+
+    Eigen::Vector3d pymax(0,std::numeric_limits<double>::min(), 0);
+    Eigen::Vector3d pymaxroot(0,0,0);
+    Eigen::Vector3d pymin(0,std::numeric_limits<double>::max(), 0);
+    for (int i = 0; i < strands.size(); i++) {
+        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+        std::shared_ptr<Particle> particle = particles.back();
+        std::shared_ptr<Particle> root = particles.front();
+        if (pymax.y() < particle->x.y()) {
+            pymax = particle->x;
+            pymaxroot = root->x;
+        }
+        if (pymin.y() > root->x.y()) {
+            pymin = root->x;
+        }
+    }
+
+    Eigen::Vector3d minVec = pymin - (pymax - pymaxroot);
+    double maxCoord = pymax.y() + 0.5;
+    double minCoord = minVec.y() - 0.5;
+    int voxelCount = (maxCoord - minCoord)/voxelSize + 1;
+    hairVoxel = std::make_shared<HairVoxel>(minCoord, minCoord, minCoord,
+                                            voxelSize, voxelCount);
+
+
+
+
 }
 
 Hair::~Hair() {}

@@ -338,7 +338,8 @@ void stepperFunc()
 		double dt = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
 		t += dt*1e-3;
 		n++;
-		this_thread::sleep_for(chrono::microseconds(1));
+		double sleeptime = std::max(5000 - dt, 0.0);
+		this_thread::sleep_for(chrono::microseconds((long)sleeptime));
 		if(t > 1000) {
 			if(keyToggles[(unsigned)' '] && keyToggles[(unsigned)'t']) {
 				cout << t/n << " ms/step" << endl;
