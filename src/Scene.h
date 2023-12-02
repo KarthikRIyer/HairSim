@@ -21,7 +21,7 @@ class Scene
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	Scene();
+	Scene(std::string hairGenMesh);
 	virtual ~Scene();
 	
 	void load(const std::string &RESOURCE_DIR);
@@ -39,6 +39,7 @@ private:
 	double t;
 	double h;
 	Eigen::Vector3d grav;
+	std::string hairGenMesh;
 
 	std::shared_ptr<Hair> hair;
 

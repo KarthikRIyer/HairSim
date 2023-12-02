@@ -8,11 +8,14 @@
 using namespace std;
 using namespace Eigen;
 
-Scene::Scene() :
+Scene::Scene(std::string hairGenMesh) :
 	t(0.0),
 	h(1e-2),
-	grav(0.0, 0.0, 0.0)
+	grav(0.0, 0.0, 0.0),
+	hairGenMesh(hairGenMesh)
 {
+//    this->hairGenMesh = hairGenMesh;
+//    std::cout<<hairGenMesh<<"\n";
 }
 
 Scene::~Scene()
@@ -38,7 +41,7 @@ void Scene::load(const string &RESOURCE_DIR)
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4);
+    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4, hairGenMesh);
     hair->init();
     sphereShape->init();
 }

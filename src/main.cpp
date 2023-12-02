@@ -189,7 +189,7 @@ static void init()
 	
 	camera = make_shared<Camera>();
 
-	scene = make_shared<Scene>();
+	scene = make_shared<Scene>(DATA_DIR + "scalp.obj");
 	scene->load(RESOURCE_DIR);
 	scene->tare();
 	scene->init();
@@ -338,7 +338,7 @@ void stepperFunc()
 		double dt = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
 		t += dt*1e-3;
 		n++;
-		this_thread::sleep_for(chrono::microseconds(5000));
+		this_thread::sleep_for(chrono::microseconds(1));
 		if(t > 1000) {
 			if(keyToggles[(unsigned)' '] && keyToggles[(unsigned)'t']) {
 				cout << t/n << " ms/step" << endl;
