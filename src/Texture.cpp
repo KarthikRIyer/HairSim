@@ -49,7 +49,7 @@ void Texture::init()
 	if(ncomps == 4) {
 		format = GL_RGBA;
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, ncomps, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	// Generate image pyramid
 	glGenerateMipmap(GL_TEXTURE_2D);
 	// Set texture wrap modes for the S and T directions

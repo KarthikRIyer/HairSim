@@ -31,6 +31,7 @@ protected:
     std::vector<float> posBuf;
     std::vector<float> norBuf;
     std::vector<float> texBuf;
+    GLuint VAO;
     GLuint posBufID;
     GLuint norBufID;
     GLuint texBufID;

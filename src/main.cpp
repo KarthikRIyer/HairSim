@@ -18,6 +18,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+//#include <nanogui/nanogui.h>
+
 #include "GLSL.h"
 #include "Program.h"
 #include "Camera.h"
@@ -42,6 +44,11 @@ shared_ptr<Program> progHair;
 shared_ptr<Program> progMesh;
 shared_ptr<Scene> scene;
 
+//shared_ptr<nanogui::Screen> screen;
+//shared_ptr<nanogui::FormHelper> gui;
+//shared_ptr<nanogui::Window> guiWindow;
+bool bvar = true;
+std::string strval = "A string";
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
@@ -108,13 +115,13 @@ static void init()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	progSimple = make_shared<Program>();
-	progSimple->setShaderNames(RESOURCE_DIR + "simple_vert.glsl", RESOURCE_DIR + "simple_frag.glsl");
-	progSimple->setVerbose(true); // Set this to true when debugging.
-	progSimple->init();
-	progSimple->addUniform("P");
-	progSimple->addUniform("MV");
-	progSimple->setVerbose(false);
+//	progSimple = make_shared<Program>();
+//	progSimple->setShaderNames(RESOURCE_DIR + "simple_vert.glsl", RESOURCE_DIR + "simple_frag.glsl");
+//	progSimple->setVerbose(true); // Set this to true when debugging.
+//	progSimple->init();
+//	progSimple->addUniform("P");
+//	progSimple->addUniform("MV");
+//	progSimple->setVerbose(false);
 
     progMesh = make_shared<Program>();
     progMesh->setShaderNames(RESOURCE_DIR + "phongmodel_vert.glsl", RESOURCE_DIR + "phongmodel_frag.glsl");
@@ -145,20 +152,21 @@ static void init()
     progHair->init();
     progHair->addUniform("P");
     progHair->addUniform("MV");
+    progHair->addUniform("color");
     progHair->addAttribute("aPos");
     progHair->setVerbose(false);
 	
-	prog = make_shared<Program>();
-	prog->setVerbose(true); // Set this to true when debugging.
-	prog->setShaderNames(RESOURCE_DIR + "phong_vert.glsl", RESOURCE_DIR + "phong_frag.glsl");
-	prog->init();
-	prog->addUniform("P");
-	prog->addUniform("MV");
-	prog->addUniform("kdFront");
-	prog->addUniform("kdBack");
-	prog->addAttribute("aPos");
-	prog->addAttribute("aNor");
-	prog->setVerbose(false);
+//	prog = make_shared<Program>();
+//	prog->setVerbose(true); // Set this to true when debugging.
+//	prog->setShaderNames(RESOURCE_DIR + "phong_vert.glsl", RESOURCE_DIR + "phong_frag.glsl");
+//	prog->init();
+//	prog->addUniform("P");
+//	prog->addUniform("MV");
+//	prog->addUniform("kdFront");
+//	prog->addUniform("kdBack");
+//	prog->addAttribute("aPos");
+//	prog->addAttribute("aNor");
+//	prog->setVerbose(false);
 	
 	camera = make_shared<Camera>();
 
@@ -166,7 +174,18 @@ static void init()
 	scene->load(RESOURCE_DIR, DATA_DIR, unit);
 	scene->tare();
 	scene->init();
-	
+
+//	gui = make_shared<nanogui::FormHelper>(screen.get());
+//    guiWindow = std::shared_ptr<nanogui::Window>(gui->add_window(nanogui::Vector2i(10, 10), "Form helper example"));
+//    gui->add_group("Basic types");
+//    gui->add_variable("bool", bvar)->set_tooltip("Test tooltip.");
+//    gui->add_variable("string", strval);
+//    screen->set_visible(true);
+//    screen->perform_layout();
+//    guiWindow->center();
+//    screen->clear();
+//    screen->draw_all();
+
 	// If there were any OpenGL errors, this will print something.
 	// You can intersperse this line in your code to find the exact location
 	// of your OpenGL error.
@@ -207,57 +226,57 @@ void render()
 	camera->applyViewMatrix(MV);
 
 	// Draw grid
-	progSimple->bind();
-	glUniformMatrix4fv(progSimple->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
-	glUniformMatrix4fv(progSimple->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
-	glLineWidth(2.0f);
-	float x0 = -0.5f;
-	float x1 = 0.5f;
-	float z0 = -0.5f;
-	float z1 = 0.5f;
-	int gridSize = 10;
-	glLineWidth(1.0f);
-	glBegin(GL_LINES);
-	for(int i = 1; i < gridSize; ++i) {
-		if(i == gridSize/2) {
-			glColor3f(0.1f, 0.1f, 0.1f);
-		} else {
-			glColor3f(0.8f, 0.8f, 0.8f);
-		}
-		float x = x0 + i / (float)gridSize * (x1 - x0);
-		glVertex3f(x, 0.0f, z0);
-		glVertex3f(x, 0.0f, z1);
-	}
-	for(int i = 1; i < gridSize; ++i) {
-		if(i == gridSize/2) {
-			glColor3f(0.1f, 0.1f, 0.1f);
-		} else {
-			glColor3f(0.8f, 0.8f, 0.8f);
-		}
-		float z = z0 + i / (float)gridSize * (z1 - z0);
-		glVertex3f(x0, 0.0f, z);
-		glVertex3f(x1, 0.0f, z);
-	}
-	glEnd();
-	glColor3f(0.4f, 0.4f, 0.4f);
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(x0, 0.0f, z0);
-	glVertex3f(x1, 0.0f, z0);
-	glVertex3f(x1, 0.0f, z1);
-	glVertex3f(x0, 0.0f, z1);
-	glEnd();
-	progSimple->unbind();
+//	progSimple->bind();
+//	glUniformMatrix4fv(progSimple->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
+//	glUniformMatrix4fv(progSimple->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
+//	glLineWidth(2.0f);
+//	float x0 = -0.5f;
+//	float x1 = 0.5f;
+//	float z0 = -0.5f;
+//	float z1 = 0.5f;
+//	int gridSize = 10;
+//	glLineWidth(1.0f);
+//	glBegin(GL_LINES);
+//	for(int i = 1; i < gridSize; ++i) {
+//		if(i == gridSize/2) {
+//			glColor3f(0.1f, 0.1f, 0.1f);
+//		} else {
+//			glColor3f(0.8f, 0.8f, 0.8f);
+//		}
+//		float x = x0 + i / (float)gridSize * (x1 - x0);
+//		glVertex3f(x, 0.0f, z0);
+//		glVertex3f(x, 0.0f, z1);
+//	}
+//	for(int i = 1; i < gridSize; ++i) {
+//		if(i == gridSize/2) {
+//			glColor3f(0.1f, 0.1f, 0.1f);
+//		} else {
+//			glColor3f(0.8f, 0.8f, 0.8f);
+//		}
+//		float z = z0 + i / (float)gridSize * (z1 - z0);
+//		glVertex3f(x0, 0.0f, z);
+//		glVertex3f(x1, 0.0f, z);
+//	}
+//	glEnd();
+//	glColor3f(0.4f, 0.4f, 0.4f);
+//	glBegin(GL_LINE_LOOP);
+//	glVertex3f(x0, 0.0f, z0);
+//	glVertex3f(x1, 0.0f, z0);
+//	glVertex3f(x1, 0.0f, z1);
+//	glVertex3f(x0, 0.0f, z1);
+//	glEnd();
+//	progSimple->unbind();
 
 	// Draw scene
 //	prog->bind();
 //	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
-//	MV->pushMatrix();
+	MV->pushMatrix();
     progHair->bind();
     glUniformMatrix4fv(progHair->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
     glUniformMatrix4fv(progHair->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 	scene->drawHair(progHair);
     progHair->unbind();
-//	MV->popMatrix();
+	MV->popMatrix();
 //	prog->unbind();
 //    progSimple->unbind();
 
@@ -282,7 +301,13 @@ void render()
 	// Pop stacks
 	MV->popMatrix();
 	P->popMatrix();
-	
+
+//    screen->draw_setup();
+//    screen->clear(); // glClear
+//    screen->draw_contents();
+//    screen->draw_widgets();
+//    screen->draw_teardown();
+
 	GLSL::checkError(GET_FILE_LINE);
 }
 
@@ -326,12 +351,17 @@ int main(int argc, char **argv)
 	if(!glfwInit()) {
 		return -1;
 	}
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	// Create a windowed mode window and its OpenGL context.
 	window = glfwCreateWindow(640, 480, "KARTHIK IYER", NULL, NULL);
 	if(!window) {
 		glfwTerminate();
 		return -1;
 	}
+	
 	// Make the window's context current.
 	glfwMakeContextCurrent(window);
 	// Initialize GLEW.
@@ -354,6 +384,8 @@ int main(int argc, char **argv)
 	// Set mouse button callback.
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	// Initialize scene.
+//    screen = make_shared<nanogui::Screen>();
+//    screen->initialize(window, true);
 	init();
 	// Start simulation thread.
 	stop_flag = false;

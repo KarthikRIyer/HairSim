@@ -105,8 +105,8 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
         auto textureKd = make_shared<Texture>();
         textureMap[filename] = textureKd;
         textureKd->setFilename(DATA_DIR + filename);
-        textureKd->init();
         textureKd->setUnit(texUnit); // Bind to unit 1
+        textureKd->init();
         textureKd->setWrapModes(GL_REPEAT, GL_REPEAT);
     }
 

@@ -1,12 +1,10 @@
-#version 120
+#version 410
 
-attribute vec3 aPos;
+layout (location = 0) in vec3 aPos;
 uniform mat4 P;
 uniform mat4 MV;
-varying vec3 color;
 
 void main()
 {
     gl_Position = P * MV * vec4(aPos, 1);
-    color = gl_Color.rgb;
 }

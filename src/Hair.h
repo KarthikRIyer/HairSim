@@ -21,13 +21,20 @@ public:
     void init();
     void draw(const std::shared_ptr<Program> prog);
     void reset();
+    void setDampingConst(double sDamping);
+    void setFrictionConst(double sFriction);
+    void setRepulsionConst(double sRepulsion);
 
 private:
     int particleCount;
     int strandCount;
     double segmentLength;
+    double sDamping = 0.9;
+    double sFriction = 0.1;
+    double sRepulsion = 0.00005;
     std::vector<unsigned int> eleBuf;
     std::vector<float> posBuf;
+    unsigned VAO;
     unsigned eleBufID;
     unsigned posBufID;
     std::vector<std::shared_ptr<Strand>> strands;

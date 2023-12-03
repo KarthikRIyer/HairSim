@@ -190,10 +190,6 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 Hair::~Hair() {}
 
 void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields, const std::vector< std::shared_ptr<Particle> > spheres) {
-    double sDamping = 0.9;
-    double sFriction = 0.1;
-//    double sRepulsion = 0.000000;
-    double sRepulsion = 0.00005;
     hairVoxel->reset();
 
     tbb::parallel_for((size_t)0, strands.size(), [=](size_t i){
@@ -266,60 +262,6 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
         }
     });
 
-//    for (int i = 0; i < strands.size(); i++) {
-//        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
-//        // accumulate forces
-//        for (int j = 0; j < particles.size(); j++) {
-//            std::shared_ptr<Particle> particle = particles[j];
-//            if (particle->fixed) continue;
-//            particle->f += particle->m * grav;
-//        }
-//        // update velocity and temp pos
-//        for (int j = 0; j < particles.size(); j++) {
-//            std::shared_ptr<Particle> particle = particles[j];
-//            if (particle->fixed) continue;
-//            particle->v = particle->v + h * (particle->f / particle->m);
-//            particle->xTemp = particle->x + particle->v * h + particle->f * h * h;
-//            particle->f = Eigen::Vector3d(0, 0, 0);
-//        }
-//
-//        // solve constraint
-//        for (int j = 1; j < particles.size(); j++) {
-//            std::shared_ptr<Particle> particle0 = particles[j-1];
-//            std::shared_ptr<Particle> particle1 = particles[j];
-//            Eigen::Vector3d particle1Pos = particle1->xTemp;
-//            Eigen::Vector3d dir = particle1->xTemp - particle0->xTemp;
-//            dir.normalize();
-//            particle1->xTemp = particle0->xTemp + dir * segmentLength; // maintain inextensibility
-//            particle1->d = particle1Pos - particle1->xTemp; // correction vector
-//        }
-//        for (int j = 1; j < particles.size(); j++) {
-//            std::shared_ptr<Particle> particle0 = particles[j-1];
-//            std::shared_ptr<Particle> particle1 = particles[j];
-//            if (particle0->fixed) continue;
-//
-//            particle0->v = ((particle0->xTemp - particle0->x)/h) + sDamping * (particle1->d/h);
-//            particle0->x = particle0->xTemp;
-//        }
-//        std::shared_ptr<Particle> lastParticle = particles[particles.size()-1]; // no damping for last particle
-//        lastParticle->v = (lastParticle->xTemp - lastParticle->x)/h;
-//        lastParticle->x = lastParticle->xTemp;
-//
-//        for (int j = 1; j < particles.size(); j++) {
-//            std::shared_ptr<Particle> particle1 = particles[j];
-//            std::shared_ptr<Particle> particle0 = particles[j-1];
-//            if (particle1->fixed) continue;
-//            for (int k = 0; k < spheres.size(); k++) {
-//                bool collision = handleCollision(spheres[k], particle1, 50.0);
-//                if (collision) {
-////                    Eigen::Vector3d dir = particle1->x - particle0->x;
-////                    dir.normalize();
-////                    particle1->x = particle0->x + dir * segmentLength;
-//                }
-//            }
-//        }
-//    }
-
     for (int i = 0; i < strands.size(); i++) {
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
@@ -385,17 +327,37 @@ bool Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Par
     return false;
 }
 
+void Hair::setDampingConst(double sDamping) {
+    this->sDamping = sDamping;
+}
+
+void Hair::setFrictionConst(double sFriction) {
+    this->sFriction = sFriction;
+}
+
+void Hair::setRepulsionConst(double sRepulsion) {
+    this->sRepulsion = sRepulsion;
+}
+
 void Hair::init() {
-// Send the position array to the GPU
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
     glGenBuffers(1, &posBufID);
+    glGenBuffers(1, &eleBufID);
+
+    // Send the position array to the GPU
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
     glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_STATIC_DRAW);
 
-    glGenBuffers(1, &eleBufID);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, eleBuf.size()*sizeof(unsigned int), &eleBuf[0], GL_STATIC_DRAW);
     // Unbind the arrays
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+    glBindVertexArray(0);
 
     GLSL::checkError(GET_FILE_LINE);
 }
@@ -418,30 +380,32 @@ void Hair::reset() {
 
 void Hair::draw(const std::shared_ptr<Program> prog) {
     GLSL::checkError(GET_FILE_LINE);
+    glBindVertexArray(VAO);
     // Bind position buffer
-     int h_pos = prog->getAttribute("aPos");
+    int h_pos = prog->getAttribute("aPos");
     glEnableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
     glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);
     glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
-
-    glColor3f(0.0f, 0.0f, 1.0f);
+//    glColor3f(0.0f, 0.0f, 1.0f);
+//    glUniformMatrix4fv(progHair->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
+    glUniform3f(prog->getUniform("color"), 0.0f, 0.0f, 1.0f);
     glPointSize(5.0);
     int count = (int)posBuf.size()/3; // number of indices to be rendered
     glDrawArrays(GL_POINTS , 0, count);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
-
     // Draw
-    glColor3f(0.8f, 0.8f, 0.8f);
-    glLineWidth(2.0);
+//    glColor3f(0.8f, 0.8f, 0.8f);
+    glUniform3f(prog->getUniform("color"), 0.8f, 0.8f, 0.8f);
+//    glLineWidth(2.0f);
+    GLSL::checkError(GET_FILE_LINE);
 //    int count = (int)posBuf.size()/3; // number of indices to be rendered
 //    glDrawArrays(GL_LINE_STRIP , 0, count);
     glDrawElements(GL_LINES, eleBuf.size(), GL_UNSIGNED_INT, (const void *)0);
-
     glDisableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    glBindVertexArray(0);
     GLSL::checkError(GET_FILE_LINE);
 //    for (int i = 0; i<strands.size();i++) {
 //        strands[i]->draw();

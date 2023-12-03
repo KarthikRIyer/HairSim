@@ -15,6 +15,12 @@
 using namespace std;
 using namespace glm;
 
+struct Vertex {
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoords;
+};
+
 Shape::Shape() :
         prog(NULL),
         posBufID(0),
@@ -82,31 +88,44 @@ void Shape::loadMesh(const string &meshName)
 
 void Shape::init()
 {
-    // Send the position array to the GPU
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+
     glGenBuffers(1, &posBufID);
+    glGenBuffers(1, &norBufID);
+    glGenBuffers(1, &texBufID);
+
+    // Send the position array to the GPU
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
     glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_STATIC_DRAW);
 
     // Send the normal array to the GPU
-    glGenBuffers(1, &norBufID);
     glBindBuffer(GL_ARRAY_BUFFER, norBufID);
     glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_STATIC_DRAW);
 
     // Send the texcoord array to the GPU
-    glGenBuffers(1, &texBufID);
+
     glBindBuffer(GL_ARRAY_BUFFER, texBufID);
     glBufferData(GL_ARRAY_BUFFER, texBuf.size()*sizeof(float), &texBuf[0], GL_STATIC_DRAW);
 
     // Unbind the arrays
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, Normal));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, TexCoords));
+    glBindVertexArray(0);
     GLSL::checkError(GET_FILE_LINE);
 }
 
 void Shape::draw() const
 {
     assert(prog);
-
+    glBindVertexArray(VAO);
     int h_pos = prog->getAttribute("aPos");
     glEnableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
@@ -130,6 +149,6 @@ void Shape::draw() const
     glDisableVertexAttribArray(h_nor);
     glDisableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    glBindVertexArray(0);
     GLSL::checkError(GET_FILE_LINE);
 }
