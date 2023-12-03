@@ -62,7 +62,7 @@ void Particle::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) 
 		MV->scale(r);
 		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 		sphere->setProgram(prog);
-		sphere->draw();
+//		sphere->draw();
 		MV->popMatrix();
 	}
 }

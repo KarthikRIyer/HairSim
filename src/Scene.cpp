@@ -84,7 +84,7 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
     sphere->r = 0.13;
     sphere->x = Vector3d(0.0, 0.377, -0.02);
 
-    hairGenMesh = DATA_DIR + "scalp.obj";
+    hairGenMesh = DATA_DIR + "scalp2.obj";
 
     loadDataInputFile(DATA_DIR);
 
