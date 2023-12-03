@@ -8,6 +8,8 @@
 #include "Program.h"
 #include "Texture.h"
 #include "MatrixStack.h"
+#include "Gravity.h"
+#include "Wind.h"
 
 using namespace std;
 using namespace Eigen;
@@ -60,8 +62,7 @@ void Scene::loadDataInputFile(const std::string &DATA_DIR)
 
 Scene::Scene() :
 	t(0.0),
-	h(1e-2),
-	grav(0.0, 0.0, 0.0)
+	h(1e-2)
 {
 }
 
@@ -73,8 +74,11 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
 {
 	// Units: meters, kilograms, seconds
 	h = 5e-3;
-	
-	grav << 0.0, -9.8, 0.0;
+
+	gravity = std::make_shared<Gravity>(Eigen::Vector3d(0.0, -9.8, 0.0));
+	wind = std::make_shared<Wind>(5.0, Eigen::Vector3d(1.0, 0.0, 1.0));
+	forceFields.push_back(gravity);
+	forceFields.push_back(wind);
 
     sphereShape = make_shared<Shape>();
     sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
@@ -139,8 +143,14 @@ void Scene::step()
 //        s->x(2) = 0.5 * sin(0.5*t);
 //    }
 
+    // update wind
+    Eigen::Vector3d wP(0.0, 0.0, 1.0);
+    Eigen::Vector3d wDir(2.0, 0.0, 1.0);
+    wDir.x() = 5.0 * sin(t);
+    wind->setDirection(wDir);
+
 	// Simulate the hair
-	hair->step(h, grav, spheres);
+	hair->step(h, forceFields, spheres);
 }
 
 void Scene::draw(std::shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const

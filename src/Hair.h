@@ -10,12 +10,14 @@
 #include "HairVoxel.h"
 #include "Program.h"
 
+class IForceField;
+
 class Hair {
 public:
     Hair(int particleCount, int strandCount, double mass, double hairLength, std::string hairGenMesh);
     virtual ~Hair();
 
-    void step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres);
+    void step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields, const std::vector< std::shared_ptr<Particle> > spheres);
     void init();
     void draw(const std::shared_ptr<Program> prog);
     void reset();

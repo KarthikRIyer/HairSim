@@ -4,6 +4,7 @@
 
 #include "Hair.h"
 #include "Particle.h"
+#include "Gravity.h"
 #include "GLSL.h"
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -188,7 +189,7 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 
 Hair::~Hair() {}
 
-void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::shared_ptr<Particle> > spheres) {
+void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields, const std::vector< std::shared_ptr<Particle> > spheres) {
     double sDamping = 0.9;
     double sFriction = 0.1;
 //    double sRepulsion = 0.000000;
@@ -201,7 +202,9 @@ void Hair::step(double h, const Eigen::Vector3d &grav, const std::vector< std::s
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
             if (particle->fixed) continue;
-            particle->f += particle->m * grav;
+            for (int k = 0; k < forceFields.size(); k++) {
+                particle->f += particle->m * forceFields[k]->getForce(particle->x);
+            }
         }
         // update velocity and temp pos
         for (int j = 0; j < particles.size(); j++) {

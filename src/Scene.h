@@ -16,6 +16,9 @@ class MatrixStack;
 class Program;
 class Shape;
 class Texture;
+class IForceField;
+class Gravity;
+class Wind;
 
 class Scene
 {
@@ -39,8 +42,11 @@ public:
 private:
 	double t;
 	double h;
-	Eigen::Vector3d grav;
 	std::string hairGenMesh;
+
+	std::shared_ptr<Gravity> gravity;
+	std::shared_ptr<Wind> wind;
+	std::vector<std::shared_ptr<IForceField>> forceFields;
 
 	std::shared_ptr<Hair> hair;
 
