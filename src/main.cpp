@@ -18,8 +18,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//#include <nanogui/nanogui.h>
-
 #include "GLSL.h"
 #include "Program.h"
 #include "Camera.h"
@@ -27,6 +25,10 @@
 #include "Shape.h"
 #include "Scene.h"
 #include "Texture.h"
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 using namespace std;
 using namespace Eigen;
@@ -43,12 +45,6 @@ shared_ptr<Program> progSimple;
 shared_ptr<Program> progHair;
 shared_ptr<Program> progMesh;
 shared_ptr<Scene> scene;
-
-//shared_ptr<nanogui::Screen> screen;
-//shared_ptr<nanogui::FormHelper> gui;
-//shared_ptr<nanogui::Window> guiWindow;
-bool bvar = true;
-std::string strval = "A string";
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
@@ -175,17 +171,6 @@ static void init()
 	scene->tare();
 	scene->init();
 
-//	gui = make_shared<nanogui::FormHelper>(screen.get());
-//    guiWindow = std::shared_ptr<nanogui::Window>(gui->add_window(nanogui::Vector2i(10, 10), "Form helper example"));
-//    gui->add_group("Basic types");
-//    gui->add_variable("bool", bvar)->set_tooltip("Test tooltip.");
-//    gui->add_variable("string", strval);
-//    screen->set_visible(true);
-//    screen->perform_layout();
-//    guiWindow->center();
-//    screen->clear();
-//    screen->draw_all();
-
 	// If there were any OpenGL errors, this will print something.
 	// You can intersperse this line in your code to find the exact location
 	// of your OpenGL error.
@@ -290,23 +275,23 @@ void render()
     progMesh->unbind();
 //	prog->unbind();
 
-	// draw mesh
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("Hello, world!");
+    ImGui::Text("This is some useful text.");
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-
-	
-	//////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////
 	// Cleanup
 	//////////////////////////////////////////////////////
 	
 	// Pop stacks
 	MV->popMatrix();
 	P->popMatrix();
-
-//    screen->draw_setup();
-//    screen->clear(); // glClear
-//    screen->draw_contents();
-//    screen->draw_widgets();
-//    screen->draw_teardown();
 
 	GLSL::checkError(GET_FILE_LINE);
 }
@@ -383,10 +368,18 @@ int main(int argc, char **argv)
 	glfwSetCursorPosCallback(window, cursor_position_callback);
 	// Set mouse button callback.
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 	// Initialize scene.
-//    screen = make_shared<nanogui::Screen>();
-//    screen->initialize(window, true);
-	init();
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 150");
+    init();
+
 	// Start simulation thread.
 	stop_flag = false;
 	thread stepperThread(stepperFunc);
@@ -401,6 +394,10 @@ int main(int argc, char **argv)
 		// Poll for and process events.
 		glfwPollEvents();
 	}
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 	// Quit program.
 	stop_flag = true;
 	stepperThread.join();
