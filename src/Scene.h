@@ -9,6 +9,7 @@
 #define EIGEN_DONT_ALIGN_STATICALLY
 #include <Eigen/Dense>
 #include "Hair.h"
+#include "SimParams.h"
 
 class Cloth;
 class Particle;
@@ -32,6 +33,7 @@ public:
 	void init();
 	void tare();
 	void reset();
+	void updateSimParams(SimParams& simParams);
 	void step();
 	
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
@@ -42,6 +44,7 @@ public:
 private:
 	double t;
 	double h;
+	SimParams simParams;
 	std::string hairGenMesh;
 
 	std::shared_ptr<Gravity> gravity;

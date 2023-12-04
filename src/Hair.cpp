@@ -240,7 +240,7 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
             std::shared_ptr<Particle> particle1 = particles[j];
             if (particle0->fixed) continue;
 
-            particle0->v = ((particle0->xTemp - particle0->x)/h) + sDamping * (particle1->d/h);
+            particle0->v = ((particle0->xTemp - particle0->x)/h) + simParams.sDamping * (particle1->d/h);
             particle0->x = particle0->xTemp;
         }
         std::shared_ptr<Particle> lastParticle = particles[particles.size()-1]; // no damping for last particle
@@ -252,12 +252,7 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
             std::shared_ptr<Particle> particle0 = particles[j-1];
             if (particle1->fixed) continue;
             for (int k = 0; k < spheres.size(); k++) {
-                bool collision = handleCollision(spheres[k], particle1, 50.0);
-                if (collision) {
-//                    Eigen::Vector3d dir = particle1->x - particle0->x;
-//                    dir.normalize();
-//                    particle1->x = particle0->x + dir * segmentLength;
-                }
+                handleCollision(spheres[k], particle1, simParams.kc);
             }
         }
     });
@@ -266,7 +261,6 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
-//            if (particle->fixed) continue;
             hairVoxel->addParticleDensity(particle);
         }
     }
@@ -275,7 +269,6 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
         std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
         for (int j = 0; j < particles.size(); j++) {
             std::shared_ptr<Particle> particle = particles[j];
-//            if (particle->fixed) continue;
             hairVoxel->addParticleVelocity(particle);
         }
     }
@@ -286,9 +279,9 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
             std::shared_ptr<Particle> particle = particles[j];
             if (particle->fixed) continue;
             Eigen::Vector3d gridVel = hairVoxel->getGridVelocity(particle->x);
-            particle->v = (1.0 - sFriction) * particle->v + sFriction * gridVel;
+            particle->v = (1.0 - simParams.sFriction) * particle->v + simParams.sFriction * gridVel;
             Eigen::Vector3d grad = hairVoxel->getGradient(particle->x);
-            particle->v += (sRepulsion*-grad)/h;
+            particle->v += (simParams.sRepulsion*-grad)/h;
         }
     });
     for (int i = 0; i < strands.size(); i++) {
@@ -297,9 +290,9 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
             std::shared_ptr<Particle> particle = particles[j];
             if (particle->fixed) continue;
             Eigen::Vector3d gridVel = hairVoxel->getGridVelocity(particle->x);
-            particle->v = (1.0 - sFriction) * particle->v + sFriction * gridVel;
+            particle->v = (1.0 - simParams.sFriction) * particle->v + simParams.sFriction * gridVel;
             Eigen::Vector3d grad = hairVoxel->getGradient(particle->x);
-            particle->v += (sRepulsion*-grad)/h;
+            particle->v += (simParams.sRepulsion*-grad)/h;
         }
     }
     int posBufIndex = 0;
@@ -315,28 +308,16 @@ void Hair::step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields
 
 }
 
-bool Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
+bool inline Hair::handleCollision(std::shared_ptr<Particle> object, std::shared_ptr<Particle> dynamicParticle, double kc) {
     Eigen::Vector3d dist = dynamicParticle->xTemp - object->x;
     double distNorm = dist.norm();
     if (distNorm < object->r + dynamicParticle->r) {
         Eigen::Vector3d tVec = (dist/distNorm) * (object->r + dynamicParticle->r - distNorm);
 //        dynamicParticle->xTemp += tVec;
-                dynamicParticle->f += kc * tVec;
+        dynamicParticle->f += simParams.kc * tVec;
         return true;
     }
     return false;
-}
-
-void Hair::setDampingConst(double sDamping) {
-    this->sDamping = sDamping;
-}
-
-void Hair::setFrictionConst(double sFriction) {
-    this->sFriction = sFriction;
-}
-
-void Hair::setRepulsionConst(double sRepulsion) {
-    this->sRepulsion = sRepulsion;
 }
 
 void Hair::init() {
@@ -387,28 +368,23 @@ void Hair::draw(const std::shared_ptr<Program> prog) {
     glBindBuffer(GL_ARRAY_BUFFER, posBufID);
     glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_DYNAMIC_DRAW);
     glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
-//    glColor3f(0.0f, 0.0f, 1.0f);
-//    glUniformMatrix4fv(progHair->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
     glUniform3f(prog->getUniform("color"), 0.0f, 0.0f, 1.0f);
     glPointSize(5.0);
     int count = (int)posBuf.size()/3; // number of indices to be rendered
     glDrawArrays(GL_POINTS , 0, count);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID);
-    // Draw
-//    glColor3f(0.8f, 0.8f, 0.8f);
     glUniform3f(prog->getUniform("color"), 0.8f, 0.8f, 0.8f);
-//    glLineWidth(2.0f);
     GLSL::checkError(GET_FILE_LINE);
-//    int count = (int)posBuf.size()/3; // number of indices to be rendered
-//    glDrawArrays(GL_LINE_STRIP , 0, count);
+
     glDrawElements(GL_LINES, eleBuf.size(), GL_UNSIGNED_INT, (const void *)0);
     glDisableVertexAttribArray(h_pos);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     GLSL::checkError(GET_FILE_LINE);
-//    for (int i = 0; i<strands.size();i++) {
-//        strands[i]->draw();
-//    }
 //    hairVoxel->draw();
+}
+
+void Hair::updateSimParams(SimParams& simParams) {
+    this->simParams = simParams;
 }

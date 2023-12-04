@@ -25,6 +25,7 @@
 #include "Shape.h"
 #include "Scene.h"
 #include "Texture.h"
+#include "SimParams.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -45,6 +46,8 @@ shared_ptr<Program> progSimple;
 shared_ptr<Program> progHair;
 shared_ptr<Program> progMesh;
 shared_ptr<Scene> scene;
+
+SimParams simParams;
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
@@ -71,6 +74,7 @@ static void char_callback(GLFWwindow *window, unsigned int key)
 	keyToggles[key] = !keyToggles[key];
 	switch(key) {
 		case 'h':
+		    scene->updateSimParams(simParams);
 			scene->step();
 			break;
 		case 'r':
@@ -196,15 +200,6 @@ void render()
 	glfwGetWindowSize(window, &width, &height);
 	camera->setAspect((float)width/(float)height);
 
-	// Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("This is some useful text.");
-    ImGui::End();
-    ImGui::Render();
-
 	// Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(keyToggles[(unsigned)'c']) {
@@ -292,7 +287,20 @@ void render()
     progMesh->unbind();
 //	prog->unbind();
 
-
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("Simulation params");
+    ImGui::SliderFloat("Wind strength", &simParams.windStrength, 0.0f, 10.0f);
+    ImGui::SliderFloat("Wind oscillation speed", &simParams.windOscilationSpeed, 0.0f, 10.0f);
+    ImGui::SliderScalar("sDamping", ImGuiDataType_Double, &simParams.sDamping, &simParams.minSDamping, &simParams.maxSDamping);
+    ImGui::SliderScalar("sFriction", ImGuiDataType_Double, &simParams.sFriction, &simParams.minSFriction, &simParams.maxSFriction);
+    ImGui::SliderScalar("sRepulsion", ImGuiDataType_Double, &simParams.sRepulsion, &simParams.minSRepulsion, &simParams.maxSRepulsion);
+    ImGui::SliderScalar("Collision constant", ImGuiDataType_Double, &simParams.kc, &simParams.minKc, &simParams.maxKc);
+//    ImGui::Slider("sDamping", &simParams.sDamping, 0.0f, 1.0f);
+    ImGui::End();
+    ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     //////////////////////////////////////////////////////
@@ -313,6 +321,7 @@ void stepperFunc()
 	while(!stop_flag) {
 		auto t0 = std::chrono::system_clock::now();
 		if(keyToggles[(unsigned)' ']) {
+            scene->updateSimParams(simParams);
 			scene->step();
 		}
 		auto t1 = std::chrono::system_clock::now();

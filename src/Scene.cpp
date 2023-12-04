@@ -144,10 +144,11 @@ void Scene::step()
 //    }
 
     // update wind
-    Eigen::Vector3d wP(0.0, 0.0, 1.0);
-    Eigen::Vector3d wDir(2.0, 0.0, 1.0);
-    wDir.x() = 5.0 * sin(t);
+    Eigen::Vector3d wP(0.0, 0.0, -5.0);
+    Eigen::Vector3d wDir(0.0, 0.0, -5.0);
+    wDir.x() = 5.0 * sin(simParams.windOscilationSpeed * t);
     wind->setDirection(wDir);
+    wind->setStrength(simParams.windStrength);
 
 	// Simulate the hair
 	hair->step(h, forceFields, spheres);
@@ -181,4 +182,9 @@ void Scene::draw(std::shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog
 void Scene::drawHair(const std::shared_ptr<Program> prog) const
 {
     hair->draw(prog);
+}
+
+void Scene::updateSimParams(SimParams& simParams) {
+    this->simParams = simParams;
+    this->hair->updateSimParams(simParams);
 }
