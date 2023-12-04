@@ -56,6 +56,8 @@ static void error_callback(int error, const char *description)
 
 static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard || io.WantTextInput) return;
 	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		stop_flag = true;
 		glfwSetWindowShouldClose(window, GL_TRUE);
@@ -64,6 +66,8 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
 
 static void char_callback(GLFWwindow *window, unsigned int key)
 {
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard || io.WantTextInput) return;
 	keyToggles[key] = !keyToggles[key];
 	switch(key) {
 		case 'h':
@@ -77,6 +81,8 @@ static void char_callback(GLFWwindow *window, unsigned int key)
 
 static void cursor_position_callback(GLFWwindow* window, double xmouse, double ymouse)
 {
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) return;
 	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	if(state == GLFW_PRESS) {
 		camera->mouseMoved(xmouse, ymouse);
@@ -85,6 +91,8 @@ static void cursor_position_callback(GLFWwindow* window, double xmouse, double y
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    auto& io = ImGui::GetIO();
+    if (io.WantCaptureMouse) return;
 	// Get the current mouse position.
 	double xmouse, ymouse;
 	glfwGetCursorPos(window, &xmouse, &ymouse);
@@ -187,7 +195,16 @@ void render()
 	// Use the window size for camera.
 	glfwGetWindowSize(window, &width, &height);
 	camera->setAspect((float)width/(float)height);
-	
+
+	// Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Begin("Hello, world!");
+    ImGui::Text("This is some useful text.");
+    ImGui::End();
+    ImGui::Render();
+
 	// Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	if(keyToggles[(unsigned)'c']) {
@@ -275,14 +292,7 @@ void render()
     progMesh->unbind();
 //	prog->unbind();
 
-    // Start the Dear ImGui frame
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("This is some useful text.");
-    ImGui::End();
-    ImGui::Render();
+
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     //////////////////////////////////////////////////////
@@ -373,7 +383,7 @@ int main(int argc, char **argv)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
