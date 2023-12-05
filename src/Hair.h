@@ -20,6 +20,7 @@ public:
 
     void step(double h, std::vector<std::shared_ptr<IForceField>> &forceFields, const std::vector< std::shared_ptr<Particle> > spheres);
     void init();
+    void cleanupBuffers();
     void draw(const std::shared_ptr<Program> prog);
     void reset();
     void updateSimParams(SimParams& simParams);

@@ -80,7 +80,7 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
 	forceFields.push_back(gravity);
 	forceFields.push_back(wind);
 
-	if (sceneNum == 1) {
+	if (sceneIndex == 1) {
         sphereShape = make_shared<Shape>();
         sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
 
@@ -129,7 +129,7 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
         }
 
         hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
-	} else if (sceneNum == 2) {
+	} else if (sceneIndex == 0) {
         sphereShape = make_shared<Shape>();
         sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
         hairGenMesh = "";
@@ -137,14 +137,14 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
         spheres.push_back(sphere);
         sphere->r = 0.1;
         sphere->x = Vector3d(0.0, -0.3, 0.0);
-        sphereTexture = make_shared<Texture>();
-        sphereTexture->setFilename(DATA_DIR + "white.png");
-        sphereTexture->setUnit(texUnit); // Bind to unit 1
-        sphereTexture->init();
-        sphereTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
-
         hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
 	}
+
+    sphereTexture = make_shared<Texture>();
+    sphereTexture->setFilename(DATA_DIR + "white.png");
+    sphereTexture->setUnit(texUnit); // Bind to unit 1
+    sphereTexture->init();
+    sphereTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
 
 }
 
@@ -152,6 +152,21 @@ void Scene::init()
 {
     hair->init();
     sphereShape->init();
+}
+
+void Scene::cleanup() {
+    sphereShape->cleanupBuffers();
+    for (auto &shape: shapes) {
+        shape->cleanupBuffers();
+    }
+    for (auto &[key, tex]: textureMap) {
+        tex->cleanupTexture();
+    }
+    hair->cleanupBuffers();
+}
+
+void Scene::setSceneNum(int sceneNum) {
+    this->sceneIndex = sceneNum;
 }
 
 void Scene::tare()

@@ -41,16 +41,21 @@ string RESOURCE_DIR = ""; // Where the resources are loaded from
 string DATA_DIR = ""; // where the data are loaded from
 
 shared_ptr<Camera> camera;
-shared_ptr<Program> prog;
-shared_ptr<Program> progSimple;
 shared_ptr<Program> progHair;
 shared_ptr<Program> progMesh;
 shared_ptr<Scene> scene;
+int texUnit = 1;
 
 SimParams simParams;
+const char* sceneNames[] = {"Scene 1", "Scene 2"};
+int currSceneIndex = 0;
+static const char* currentScene = sceneNames[currSceneIndex];
+int prevSceneIndex = 0;
 
 // https://stackoverflow.com/questions/41470942/stop-infinite-loop-in-different-thread
 std::atomic<bool> stop_flag;
+std::atomic<bool> run_sim;
+std::atomic<bool> sim_paused;
 
 static void error_callback(int error, const char *description)
 {
@@ -122,14 +127,6 @@ static void init()
 	// Enable alpha blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-//	progSimple = make_shared<Program>();
-//	progSimple->setShaderNames(RESOURCE_DIR + "simple_vert.glsl", RESOURCE_DIR + "simple_frag.glsl");
-//	progSimple->setVerbose(true); // Set this to true when debugging.
-//	progSimple->init();
-//	progSimple->addUniform("P");
-//	progSimple->addUniform("MV");
-//	progSimple->setVerbose(false);
 
     progMesh = make_shared<Program>();
     progMesh->setShaderNames(RESOURCE_DIR + "phongmodel_vert.glsl", RESOURCE_DIR + "phongmodel_frag.glsl");
@@ -146,10 +143,9 @@ static void init()
     progMesh->addUniform("kdTex");
     progMesh->setVerbose(false);
 
-    // Bind the texture to unit 1.
-    int unit = 1;
+    // Bind the texture to texUnit 1.
     progMesh->bind();
-    glUniform1i(progMesh->getUniform("kdTex"), unit);
+    glUniform1i(progMesh->getUniform("kdTex"), texUnit);
     progMesh->unbind();
 
 
@@ -164,22 +160,10 @@ static void init()
     progHair->addAttribute("aPos");
     progHair->setVerbose(false);
 	
-//	prog = make_shared<Program>();
-//	prog->setVerbose(true); // Set this to true when debugging.
-//	prog->setShaderNames(RESOURCE_DIR + "phong_vert.glsl", RESOURCE_DIR + "phong_frag.glsl");
-//	prog->init();
-//	prog->addUniform("P");
-//	prog->addUniform("MV");
-//	prog->addUniform("kdFront");
-//	prog->addUniform("kdBack");
-//	prog->addAttribute("aPos");
-//	prog->addAttribute("aNor");
-//	prog->setVerbose(false);
-	
 	camera = make_shared<Camera>();
 
 	scene = make_shared<Scene>();
-	scene->load(RESOURCE_DIR, DATA_DIR, unit);
+	scene->load(RESOURCE_DIR, DATA_DIR, texUnit);
 	scene->tare();
 	scene->init();
 
@@ -222,51 +206,9 @@ void render()
 	MV->pushMatrix();
 	camera->applyViewMatrix(MV);
 
-	// Draw grid
-//	progSimple->bind();
-//	glUniformMatrix4fv(progSimple->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
-//	glUniformMatrix4fv(progSimple->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
-//	glLineWidth(2.0f);
-//	float x0 = -0.5f;
-//	float x1 = 0.5f;
-//	float z0 = -0.5f;
-//	float z1 = 0.5f;
-//	int gridSize = 10;
-//	glLineWidth(1.0f);
-//	glBegin(GL_LINES);
-//	for(int i = 1; i < gridSize; ++i) {
-//		if(i == gridSize/2) {
-//			glColor3f(0.1f, 0.1f, 0.1f);
-//		} else {
-//			glColor3f(0.8f, 0.8f, 0.8f);
-//		}
-//		float x = x0 + i / (float)gridSize * (x1 - x0);
-//		glVertex3f(x, 0.0f, z0);
-//		glVertex3f(x, 0.0f, z1);
-//	}
-//	for(int i = 1; i < gridSize; ++i) {
-//		if(i == gridSize/2) {
-//			glColor3f(0.1f, 0.1f, 0.1f);
-//		} else {
-//			glColor3f(0.8f, 0.8f, 0.8f);
-//		}
-//		float z = z0 + i / (float)gridSize * (z1 - z0);
-//		glVertex3f(x0, 0.0f, z);
-//		glVertex3f(x1, 0.0f, z);
-//	}
-//	glEnd();
-//	glColor3f(0.4f, 0.4f, 0.4f);
-//	glBegin(GL_LINE_LOOP);
-//	glVertex3f(x0, 0.0f, z0);
-//	glVertex3f(x1, 0.0f, z0);
-//	glVertex3f(x1, 0.0f, z1);
-//	glVertex3f(x0, 0.0f, z1);
-//	glEnd();
-//	progSimple->unbind();
+
 
 	// Draw scene
-//	prog->bind();
-//	glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
 	MV->pushMatrix();
     progHair->bind();
     glUniformMatrix4fv(progHair->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
@@ -274,10 +216,7 @@ void render()
 	scene->drawHair(progHair);
     progHair->unbind();
 	MV->popMatrix();
-//	prog->unbind();
-//    progSimple->unbind();
 
-//    prog->bind();
     progMesh->bind();
 	glUniformMatrix4fv(progMesh->getUniform("P"), 1, GL_FALSE, glm::value_ptr(P->topMatrix()));
     glUniformMatrix4fv(progMesh->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
@@ -285,7 +224,6 @@ void render()
     scene->draw(MV, progMesh);
 	MV->popMatrix();
     progMesh->unbind();
-//	prog->unbind();
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
@@ -298,7 +236,34 @@ void render()
     ImGui::SliderScalar("sFriction", ImGuiDataType_Double, &simParams.sFriction, &simParams.minSFriction, &simParams.maxSFriction);
     ImGui::SliderScalar("sRepulsion", ImGuiDataType_Double, &simParams.sRepulsion, &simParams.minSRepulsion, &simParams.maxSRepulsion);
     ImGui::SliderScalar("Collision constant", ImGuiDataType_Double, &simParams.kc, &simParams.minKc, &simParams.maxKc);
-//    ImGui::Slider("sDamping", &simParams.sDamping, 0.0f, 1.0f);
+
+    if (ImGui::BeginCombo("Choose scene", currentScene)) {
+        for (int n = 0; n < IM_ARRAYSIZE(sceneNames); n++) {
+            bool is_selected = (currentScene == sceneNames[n]);
+            if (ImGui::Selectable(sceneNames[n], is_selected)) {
+                currentScene = sceneNames[n];
+                currSceneIndex = n;
+            }
+            if (is_selected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    if (ImGui::Button("Load Scene") && prevSceneIndex != currSceneIndex) {
+        std::cout<<"Clicked\n";
+        prevSceneIndex = currSceneIndex;
+        run_sim = false;
+        keyToggles[(unsigned)' '] = false;
+        while (!sim_paused) {}
+        scene->cleanup();
+        scene = make_shared<Scene>();
+        scene->setSceneNum(currSceneIndex);
+        scene->load(RESOURCE_DIR, DATA_DIR, texUnit);
+        scene->tare();
+        scene->init();
+        sim_paused = false;
+        run_sim = true;
+    }
+
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -319,24 +284,27 @@ void stepperFunc()
 	double t = 0;
 	int n = 0;
 	while(!stop_flag) {
-		auto t0 = std::chrono::system_clock::now();
-		if(keyToggles[(unsigned)' ']) {
-            scene->updateSimParams(simParams);
-			scene->step();
-		}
-		auto t1 = std::chrono::system_clock::now();
-		double dt = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
-		t += dt*1e-3;
-		n++;
-		double sleeptime = std::max(5000 - dt, 0.0);
-		this_thread::sleep_for(chrono::microseconds((long)sleeptime));
-		if(t > 1000) {
-			if(keyToggles[(unsigned)' '] && keyToggles[(unsigned)'t']) {
-				cout << t/n << " ms/step" << endl;
-			}
-			t = 0;
-			n = 0;
-		}
+	    if (run_sim) {
+            auto t0 = std::chrono::system_clock::now();
+            if(keyToggles[(unsigned)' ']) {
+                scene->updateSimParams(simParams);
+                scene->step();
+            }
+            auto t1 = std::chrono::system_clock::now();
+            double dt = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
+            t += dt*1e-3;
+            n++;
+            double sleeptime = std::max(5000 - dt, 0.0);
+            this_thread::sleep_for(chrono::microseconds((long)sleeptime));
+            if(t > 1000) {
+                if(keyToggles[(unsigned)' '] && keyToggles[(unsigned)'t']) {
+                    cout << t/n << " ms/step" << endl;
+                }
+                t = 0;
+                n = 0;
+            }
+            if (!run_sim) sim_paused = true;
+	    }
 	}
 }
 
@@ -401,6 +369,8 @@ int main(int argc, char **argv)
 
 	// Start simulation thread.
 	stop_flag = false;
+	run_sim = true;
+	sim_paused = false;
 	thread stepperThread(stepperFunc);
 	// Loop until the user closes the window.
 	while(!glfwWindowShouldClose(window)) {

@@ -66,6 +66,10 @@ void Texture::init()
 	GLSL::checkError(GET_FILE_LINE);
 }
 
+void Texture::cleanupTexture() {
+    glDeleteTextures(1, &tid);
+}
+
 void Texture::setWrapModes(GLint wrapS, GLint wrapT)
 {
 	// Must be called after init()

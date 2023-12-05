@@ -383,6 +383,12 @@ void Hair::init() {
     GLSL::checkError(GET_FILE_LINE);
 }
 
+void Hair::cleanupBuffers() {
+    glDeleteBuffers(1, &posBufID);
+    glDeleteBuffers(1, &eleBufID);
+    glDeleteVertexArrays(1, &VAO);
+}
+
 void Hair::reset() {
     for (int i = 0; i < strands.size(); i++) {
         strands[i]->reset();

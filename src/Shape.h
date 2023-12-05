@@ -20,6 +20,7 @@ public:
     void loadMesh(const std::string &meshName);
     void setProgram(std::shared_ptr<Program> p) { prog = p; }
     virtual void init();
+    virtual void cleanupBuffers();
     virtual void draw() const;
     void setTextureFilename(const std::string &f) { textureFilename = f; }
     std::string getTextureFilename() const { return textureFilename; }

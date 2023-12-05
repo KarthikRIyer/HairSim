@@ -122,6 +122,13 @@ void Shape::init()
     GLSL::checkError(GET_FILE_LINE);
 }
 
+void Shape::cleanupBuffers() {
+    glDeleteBuffers(1, &posBufID);
+    glDeleteBuffers(1, &norBufID);
+    glDeleteBuffers(1, &texBufID);
+    glDeleteVertexArrays(1, &VAO);
+}
+
 void Shape::draw() const
 {
     assert(prog);

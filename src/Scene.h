@@ -31,10 +31,12 @@ public:
 
 	void load(const std::string &RESOURCE_DIR, const std::string &DATA_DIR, int texUnit);
 	void init();
+	void cleanup();
 	void tare();
 	void reset();
 	void updateSimParams(SimParams& simParams);
 	void step();
+	void setSceneNum(int sceneNum);
 	
 	void draw(std::shared_ptr<MatrixStack> MV, const std::shared_ptr<Program> prog) const;
 	void drawHair(const std::shared_ptr<Program> progHair) const;
@@ -63,7 +65,7 @@ private:
     std::vector<std::vector<std::string>> meshData;
 
     void loadDataInputFile(const std::string &DATA_DIR);
-    int sceneNum = 2;
+    int sceneIndex = 0;
 };
 
 #endif
