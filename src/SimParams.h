@@ -11,7 +11,7 @@ struct SimParams {
     double sDamping = 0.9;
     double sFriction = 0.1;
     double sRepulsion = 0.00005;
-    double kc = 50.0;
+    double kc = 2e-4;
 
     double minSDamping = 0.0;
     double maxSDamping = 1.0;
@@ -20,7 +20,7 @@ struct SimParams {
     double minSRepulsion = 0.0;
     double maxSRepulsion = 0.0001;
     double minKc = 0.0;
-    double maxKc = 100.0;
+    double maxKc = 4e-4;
 };
 
 #endif //HAIRSIM_SIMPARAMS_H

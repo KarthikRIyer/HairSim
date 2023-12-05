@@ -114,7 +114,7 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(20, 50, 0.8, 0.4, hairGenMesh);
+    hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
     hair->init();
     sphereShape->init();
 }
