@@ -87,6 +87,23 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
     spheres.push_back(sphere);
     sphere->r = 0.13;
     sphere->x = Vector3d(0.0, 0.377, -0.02);
+    auto sphereN = make_shared<Particle>(sphereShape);
+    spheres.push_back(sphereN);
+    sphereN->r = 0.06;
+    sphereN->x = Vector3d(0.0, 0.2, -0.1);
+
+    auto sphereLS = make_shared<Particle>(sphereShape);
+    spheres.push_back(sphereLS);
+    sphereLS->r = 0.15;
+    sphereLS->x = Vector3d(0.2, 0.0, -0.1);
+    auto sphereRS = make_shared<Particle>(sphereShape);
+    spheres.push_back(sphereRS);
+    sphereRS->r = 0.15;
+    sphereRS->x = Vector3d(-0.2, 0.0, -0.1);
+    auto sphereC = make_shared<Particle>(sphereShape);
+    spheres.push_back(sphereC);
+    sphereC->r = 0.18;
+    sphereC->x = Vector3d(0.0, 0.0, -0.1);
 
     hairGenMesh = DATA_DIR + "scalp2.obj";
 
