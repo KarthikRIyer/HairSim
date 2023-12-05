@@ -26,14 +26,15 @@ Particle::Particle() :
 	
 }
 
-Particle::Particle(const shared_ptr<Shape> s) :
+Particle::Particle(const shared_ptr<Shape> s, bool drawSphere) :
 	r(1.0),
 	m(1.0),
 	i(-1),
 	x(0.0, 0.0, 0.0),
 	v(0.0, 0.0, 0.0),
 	fixed(true),
-	sphere(s)
+	sphere(s),
+	drawSphere(drawSphere)
 {
 	
 }
@@ -56,13 +57,13 @@ void Particle::reset()
 
 void Particle::draw(shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog) const
 {
-	if(sphere) {
+	if(drawSphere) {
 		MV->pushMatrix();
 		MV->translate(x(0), x(1), x(2));
 		MV->scale(r);
 		glUniformMatrix4fv(prog->getUniform("MV"), 1, GL_FALSE, glm::value_ptr(MV->topMatrix()));
 		sphere->setProgram(prog);
-//		sphere->draw();
+		sphere->draw();
 		MV->popMatrix();
 	}
 }

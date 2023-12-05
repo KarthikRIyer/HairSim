@@ -18,7 +18,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	Particle();
-	Particle(const std::shared_ptr<Shape> shape);
+	Particle(const std::shared_ptr<Shape> shape, bool drawSphere = false);
 	virtual ~Particle();
 	void tare();
 	void reset();
@@ -38,6 +38,7 @@ public:
 	
 private:
 	const std::shared_ptr<Shape> sphere;
+	bool drawSphere = false;
 };
 
 #endif

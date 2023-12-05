@@ -80,58 +80,76 @@ void Scene::load(const string &RESOURCE_DIR, const string &DATA_DIR, int texUnit
 	forceFields.push_back(gravity);
 	forceFields.push_back(wind);
 
-    sphereShape = make_shared<Shape>();
-    sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
+	if (sceneNum == 1) {
+        sphereShape = make_shared<Shape>();
+        sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
 
-    auto sphere = make_shared<Particle>(sphereShape);
-    spheres.push_back(sphere);
-    sphere->r = 0.13;
-    sphere->x = Vector3d(0.0, 0.377, -0.02);
-    auto sphereN = make_shared<Particle>(sphereShape);
-    spheres.push_back(sphereN);
-    sphereN->r = 0.06;
-    sphereN->x = Vector3d(0.0, 0.2, -0.1);
+        auto sphere = make_shared<Particle>(sphereShape);
+        spheres.push_back(sphere);
+        sphere->r = 0.13;
+        sphere->x = Vector3d(0.0, 0.377, -0.02);
+        auto sphereN = make_shared<Particle>(sphereShape);
+        spheres.push_back(sphereN);
+        sphereN->r = 0.06;
+        sphereN->x = Vector3d(0.0, 0.2, -0.1);
 
-    auto sphereLS = make_shared<Particle>(sphereShape);
-    spheres.push_back(sphereLS);
-    sphereLS->r = 0.15;
-    sphereLS->x = Vector3d(0.2, 0.0, -0.1);
-    auto sphereRS = make_shared<Particle>(sphereShape);
-    spheres.push_back(sphereRS);
-    sphereRS->r = 0.15;
-    sphereRS->x = Vector3d(-0.2, 0.0, -0.1);
-    auto sphereC = make_shared<Particle>(sphereShape);
-    spheres.push_back(sphereC);
-    sphereC->r = 0.18;
-    sphereC->x = Vector3d(0.0, 0.0, -0.1);
+        auto sphereLS = make_shared<Particle>(sphereShape);
+        spheres.push_back(sphereLS);
+        sphereLS->r = 0.15;
+        sphereLS->x = Vector3d(0.2, 0.0, -0.1);
+        auto sphereRS = make_shared<Particle>(sphereShape);
+        spheres.push_back(sphereRS);
+        sphereRS->r = 0.15;
+        sphereRS->x = Vector3d(-0.2, 0.0, -0.1);
+        auto sphereC = make_shared<Particle>(sphereShape);
+        spheres.push_back(sphereC);
+        sphereC->r = 0.18;
+        sphereC->x = Vector3d(0.0, 0.0, -0.1);
 
-    hairGenMesh = DATA_DIR + "scalp2.obj";
+        hairGenMesh = DATA_DIR + "scalp2.obj";
 
-    loadDataInputFile(DATA_DIR);
+        loadDataInputFile(DATA_DIR);
 
-    // Create shapes
-    for(const auto &mesh : meshData) {
-        auto shape = make_shared<Shape>();
-        shapes.push_back(shape);
-        shape->loadMesh(DATA_DIR + mesh[0]);
-        shape->setTextureFilename(mesh[1]);
-        shape->init();
-    }
+        // Create shapes
+        for(const auto &mesh : meshData) {
+            auto shape = make_shared<Shape>();
+            shapes.push_back(shape);
+            shape->loadMesh(DATA_DIR + mesh[0]);
+            shape->setTextureFilename(mesh[1]);
+            shape->init();
+        }
 
-    for(const auto &filename : textureData) {
-        auto textureKd = make_shared<Texture>();
-        textureMap[filename] = textureKd;
-        textureKd->setFilename(DATA_DIR + filename);
-        textureKd->setUnit(texUnit); // Bind to unit 1
-        textureKd->init();
-        textureKd->setWrapModes(GL_REPEAT, GL_REPEAT);
-    }
+        for(const auto &filename : textureData) {
+            auto textureKd = make_shared<Texture>();
+            textureMap[filename] = textureKd;
+            textureKd->setFilename(DATA_DIR + filename);
+            textureKd->setUnit(texUnit); // Bind to unit 1
+            textureKd->init();
+            textureKd->setWrapModes(GL_REPEAT, GL_REPEAT);
+        }
+
+        hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
+	} else if (sceneNum == 2) {
+        sphereShape = make_shared<Shape>();
+        sphereShape->loadMesh(RESOURCE_DIR + "sphere2.obj");
+        hairGenMesh = "";
+        auto sphere = make_shared<Particle>(sphereShape, true);
+        spheres.push_back(sphere);
+        sphere->r = 0.1;
+        sphere->x = Vector3d(0.0, -0.3, 0.0);
+        sphereTexture = make_shared<Texture>();
+        sphereTexture->setFilename(DATA_DIR + "white.png");
+        sphereTexture->setUnit(texUnit); // Bind to unit 1
+        sphereTexture->init();
+        sphereTexture->setWrapModes(GL_REPEAT, GL_REPEAT);
+
+        hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
+	}
 
 }
 
 void Scene::init()
 {
-    hair = std::make_shared<Hair>(20, 50, 2.15e-6, 0.4, hairGenMesh);
     hair->init();
     sphereShape->init();
 }
@@ -187,10 +205,11 @@ void Scene::draw(std::shared_ptr<MatrixStack> MV, const shared_ptr<Program> prog
         textureMap.at(shape->getTextureFilename())->unbind();
     }
 
+    sphereTexture->bind(prog->getUniform("kdTex"));
     glUniform3f(prog->getUniform("ka"), 0.1f, 0.1f, 0.1f);
     glUniform3f(prog->getUniform("ks"), 0.1f, 0.1f, 0.1f);
     glUniform1f(prog->getUniform("s"), 200.0f);
-//    glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
+    glUniform3fv(prog->getUniform("kdFront"), 1, Vector3f(1.0, 1.0, 1.0).data());
     for(int i = 0; i < (int)spheres.size(); ++i) {
         spheres[i]->draw(MV, prog);
     }

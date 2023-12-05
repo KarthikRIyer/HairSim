@@ -50,7 +50,7 @@ private:
 	std::shared_ptr<Gravity> gravity;
 	std::shared_ptr<Wind> wind;
 	std::vector<std::shared_ptr<IForceField>> forceFields;
-
+    std::shared_ptr<Texture> sphereTexture;
 	std::shared_ptr<Hair> hair;
 
 	std::shared_ptr<Shape> sphereShape;
@@ -63,6 +63,7 @@ private:
     std::vector<std::vector<std::string>> meshData;
 
     void loadDataInputFile(const std::string &DATA_DIR);
+    int sceneNum = 2;
 };
 
 #endif

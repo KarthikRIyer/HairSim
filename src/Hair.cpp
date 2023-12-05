@@ -17,85 +17,86 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
     strands.clear();
     segmentLength = hairLength / (particleCount - 1);
 
-    const float range_from  = 0;
-    const float range_to    = 1;
-    std::random_device                  rand_dev;
-    std::mt19937                        generator(rand_dev());
-    std::uniform_real_distribution<float>  distr(range_from, range_to);
+    if (!hairGenMesh.empty()) {
+        const float range_from  = 0;
+        const float range_to    = 1;
+        std::random_device                  rand_dev;
+        std::mt19937                        generator(rand_dev());
+        std::uniform_real_distribution<float>  distr(range_from, range_to);
 
-    std::vector<Eigen::Vector3d> roots;
-    double xmin = std::numeric_limits<double>::max(), xmax = std::numeric_limits<double>::min();
-    double ymin = std::numeric_limits<double>::max(), ymax = std::numeric_limits<double>::min();
-    double zmin = std::numeric_limits<double>::max(), zmax = std::numeric_limits<double>::min();
+        std::vector<Eigen::Vector3d> roots;
+        double xmin = std::numeric_limits<double>::max(), xmax = std::numeric_limits<double>::min();
+        double ymin = std::numeric_limits<double>::max(), ymax = std::numeric_limits<double>::min();
+        double zmin = std::numeric_limits<double>::max(), zmax = std::numeric_limits<double>::min();
 
-    tinyobj::attrib_t attrib;
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    std::string warn;
-    std::string err;
-    bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, hairGenMesh.c_str());
-    if(!warn.empty()) {
-        //std::cout << warn << std::endl;
-    }
-    if(!err.empty()) {
-        std::cerr << err << std::endl;
-    }
-    if(!ret) {
-        return;
-    }
-    // Loop over shapes
-    for (size_t s = 0; s < shapes.size(); s++) {
-        // Loop over faces(polygon)
-        size_t index_offset = 0;
-        for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-            int fv = shapes[s].mesh.num_face_vertices[f];
-
-            float ax, ay, az;
-            float bx, by, bz;
-            float cx, cy, cz;
-
-            tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + 0];
-            ax = attrib.vertices[3*idx.vertex_index+0];
-            ay = attrib.vertices[3*idx.vertex_index+1];
-            az = attrib.vertices[3*idx.vertex_index+2];
-            Eigen::Vector3d a(ax, ay, az);
-
-            idx = shapes[s].mesh.indices[index_offset + 1];
-            bx = attrib.vertices[3*idx.vertex_index+0];
-            by = attrib.vertices[3*idx.vertex_index+1];
-            bz = attrib.vertices[3*idx.vertex_index+2];
-            Eigen::Vector3d b(bx, by, bz);
-
-            idx = shapes[s].mesh.indices[index_offset + 2];
-            cx = attrib.vertices[3*idx.vertex_index+0];
-            cy = attrib.vertices[3*idx.vertex_index+1];
-            cz = attrib.vertices[3*idx.vertex_index+2];
-            Eigen::Vector3d c(cx, cy, cz);
-
-            for (int i = 0; i < 3; i++) {
-                float alpha = distr(generator);
-                float beta = distr(generator);
-                if (alpha > beta) {
-                    float t = alpha;
-                    alpha = beta;
-                    beta = t;
-                }
-                float p = alpha;
-                float q = beta - alpha;
-                float r = 1.0f - beta;
-                Eigen::Vector3d pt = p*a + q*b + r*c;
-                xmin = std::min(xmin, pt.x());
-                ymin = std::min(ymin, pt.y());
-                zmin = std::min(zmin, pt.z());
-                xmax = std::max(xmax, pt.x());
-                ymax = std::max(ymax, pt.y());
-                zmax = std::max(zmax, pt.z());
-                roots.push_back(pt);
-            }
-
-            index_offset += fv;
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn;
+        std::string err;
+        bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, hairGenMesh.c_str());
+        if(!warn.empty()) {
+            //std::cout << warn << std::endl;
         }
-    }
+        if(!err.empty()) {
+            std::cerr << err << std::endl;
+        }
+        if(!ret) {
+            return;
+        }
+        // Loop over shapes
+        for (size_t s = 0; s < shapes.size(); s++) {
+            // Loop over faces(polygon)
+            size_t index_offset = 0;
+            for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+                int fv = shapes[s].mesh.num_face_vertices[f];
+
+                float ax, ay, az;
+                float bx, by, bz;
+                float cx, cy, cz;
+
+                tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + 0];
+                ax = attrib.vertices[3*idx.vertex_index+0];
+                ay = attrib.vertices[3*idx.vertex_index+1];
+                az = attrib.vertices[3*idx.vertex_index+2];
+                Eigen::Vector3d a(ax, ay, az);
+
+                idx = shapes[s].mesh.indices[index_offset + 1];
+                bx = attrib.vertices[3*idx.vertex_index+0];
+                by = attrib.vertices[3*idx.vertex_index+1];
+                bz = attrib.vertices[3*idx.vertex_index+2];
+                Eigen::Vector3d b(bx, by, bz);
+
+                idx = shapes[s].mesh.indices[index_offset + 2];
+                cx = attrib.vertices[3*idx.vertex_index+0];
+                cy = attrib.vertices[3*idx.vertex_index+1];
+                cz = attrib.vertices[3*idx.vertex_index+2];
+                Eigen::Vector3d c(cx, cy, cz);
+
+                for (int i = 0; i < 3; i++) {
+                    float alpha = distr(generator);
+                    float beta = distr(generator);
+                    if (alpha > beta) {
+                        float t = alpha;
+                        alpha = beta;
+                        beta = t;
+                    }
+                    float p = alpha;
+                    float q = beta - alpha;
+                    float r = 1.0f - beta;
+                    Eigen::Vector3d pt = p*a + q*b + r*c;
+                    xmin = std::min(xmin, pt.x());
+                    ymin = std::min(ymin, pt.y());
+                    zmin = std::min(zmin, pt.z());
+                    xmax = std::max(xmax, pt.x());
+                    ymax = std::max(ymax, pt.y());
+                    zmax = std::max(zmax, pt.z());
+                    roots.push_back(pt);
+                }
+
+                index_offset += fv;
+            }
+        }
 
 //    std::vector<Eigen::Vector3d> dirs;
 //    dirs.resize(strandCount);
@@ -106,38 +107,38 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 //        dirs[i] = dir;
 //    }
 
-    strandCount = roots.size();
+        strandCount = roots.size();
 //    strandCount = 10;
-    strands.resize(strandCount);
-    posBuf.clear();
-    eleBuf.clear();
-    posBuf.resize(strandCount * particleCount * 3);
-    eleBuf.resize(strandCount * particleCount * 2);
+        strands.resize(strandCount);
+        posBuf.clear();
+        eleBuf.clear();
+        posBuf.resize(strandCount * particleCount * 3);
+        eleBuf.resize(strandCount * particleCount * 2);
 
-    for (int i = 0; i < strandCount; i++) {
+        for (int i = 0; i < strandCount; i++) {
 //        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0.51, -0.02), dirs[i]);
-        std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, roots[i], Eigen::Vector3d(0.1,1,0));
-        strands[i] = strand;
-    }
-    int posBufIndex = 0;
-    int eleBufIndex = 0;
-    int particleIndex = -1;
-    for (int i = 0; i < strands.size(); i++) {
-        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
-        for (int j = 0; j < particles.size(); j++) {
-            std::shared_ptr<Particle> particle = particles[j];
-            posBuf[posBufIndex++] = particle->x.x();
-            posBuf[posBufIndex++] = particle->x.y();
-            posBuf[posBufIndex++] = particle->x.z();
-            if (j != 0) {
-                eleBuf[eleBufIndex++] = particleIndex;
-                eleBuf[eleBufIndex++] = particleIndex+1;
-            }
-            particleIndex++;
+            std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, roots[i], Eigen::Vector3d(0.1,1,0));
+            strands[i] = strand;
         }
-    }
+        int posBufIndex = 0;
+        int eleBufIndex = 0;
+        int particleIndex = -1;
+        for (int i = 0; i < strands.size(); i++) {
+            std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+            for (int j = 0; j < particles.size(); j++) {
+                std::shared_ptr<Particle> particle = particles[j];
+                posBuf[posBufIndex++] = particle->x.x();
+                posBuf[posBufIndex++] = particle->x.y();
+                posBuf[posBufIndex++] = particle->x.z();
+                if (j != 0) {
+                    eleBuf[eleBufIndex++] = particleIndex;
+                    eleBuf[eleBufIndex++] = particleIndex+1;
+                }
+                particleIndex++;
+            }
+        }
 
-    double voxelSize = 0.5 * segmentLength;
+        double voxelSize = 0.5 * segmentLength;
 
 //    double maxX = std::max(std::abs(xmin), std::abs(xmax));
 //    double maxY = std::max(std::abs(ymin), std::abs(ymax));
@@ -159,32 +160,71 @@ Hair::Hair(int particleCount, int strandCount, double mass, double hairLength, s
 //    hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
 //                                            voxelSize, voxelCount*2);
 
-    Eigen::Vector3d pymax(0,std::numeric_limits<double>::min(), 0);
-    Eigen::Vector3d pymaxroot(0,0,0);
-    Eigen::Vector3d pymin(0,std::numeric_limits<double>::max(), 0);
-    for (int i = 0; i < strands.size(); i++) {
-        std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
-        std::shared_ptr<Particle> particle = particles.back();
-        std::shared_ptr<Particle> root = particles.front();
-        if (pymax.y() < particle->x.y()) {
-            pymax = particle->x;
-            pymaxroot = root->x;
+        Eigen::Vector3d pymax(0,std::numeric_limits<double>::min(), 0);
+        Eigen::Vector3d pymaxroot(0,0,0);
+        Eigen::Vector3d pymin(0,std::numeric_limits<double>::max(), 0);
+        for (int i = 0; i < strands.size(); i++) {
+            std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+            std::shared_ptr<Particle> particle = particles.back();
+            std::shared_ptr<Particle> root = particles.front();
+            if (pymax.y() < particle->x.y()) {
+                pymax = particle->x;
+                pymaxroot = root->x;
+            }
+            if (pymin.y() > root->x.y()) {
+                pymin = root->x;
+            }
         }
-        if (pymin.y() > root->x.y()) {
-            pymin = root->x;
+
+        Eigen::Vector3d minVec = pymin - (pymax - pymaxroot);
+        double maxCoord = pymax.y() + 0.5;
+        double minCoord = minVec.y() - 0.5;
+        int voxelCount = (maxCoord - minCoord)/voxelSize + 1;
+        hairVoxel = std::make_shared<HairVoxel>(minCoord, minCoord, minCoord,
+                                                voxelSize, voxelCount);
+    } else {
+        double voxelSize = 0.5 * segmentLength;
+        double coordMin = -(2 * voxelSize * (particleCount - 1) + 0.5 * voxelSize);
+        hairVoxel = std::make_shared<HairVoxel>(coordMin, coordMin, coordMin,
+                                                voxelSize, particleCount*5);
+
+        std::vector<Eigen::Vector3d> dirs;
+        dirs.resize(strandCount);
+        double angleInc = (2*M_PI)/strandCount;
+        for (int i = 0; i < strandCount; i++) {
+            double angle = i*angleInc + (M_PI*0.5);
+            Eigen::Vector3d dir(sin(angle),0,cos(angle));
+            dirs[i] = dir;
+        }
+
+        posBuf.clear();
+        eleBuf.clear();
+        strands.resize(strandCount);
+        posBuf.resize(strandCount * particleCount * 3);
+        eleBuf.resize(strandCount * particleCount * 2);
+
+        for (int i = 0; i < strandCount; i++) {
+            std::shared_ptr<Strand> strand = std::make_shared<Strand>(mass, segmentLength, particleCount, Eigen::Vector3d(0, 0, 0), dirs[i]);
+            strands[i] = strand;
+        }
+        int posBufIndex = 0;
+        int eleBufIndex = 0;
+        int particleIndex = -1;
+        for (int i = 0; i < strands.size(); i++) {
+            std::vector<std::shared_ptr<Particle>> particles = strands[i]->getParticles();
+            for (int j = 0; j < particles.size(); j++) {
+                std::shared_ptr<Particle> particle = particles[j];
+                posBuf[posBufIndex++] = particle->x.x();
+                posBuf[posBufIndex++] = particle->x.y();
+                posBuf[posBufIndex++] = particle->x.z();
+                if (j != 0) {
+                    eleBuf[eleBufIndex++] = particleIndex;
+                    eleBuf[eleBufIndex++] = particleIndex+1;
+                }
+                particleIndex++;
+            }
         }
     }
-
-    Eigen::Vector3d minVec = pymin - (pymax - pymaxroot);
-    double maxCoord = pymax.y() + 0.5;
-    double minCoord = minVec.y() - 0.5;
-    int voxelCount = (maxCoord - minCoord)/voxelSize + 1;
-    hairVoxel = std::make_shared<HairVoxel>(minCoord, minCoord, minCoord,
-                                            voxelSize, voxelCount);
-
-
-
-
 }
 
 Hair::~Hair() {}
