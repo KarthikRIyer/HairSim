@@ -32,14 +32,14 @@ main()
     constexpr int max_n = 10;
     constexpr int max_n_2 = 5;
     int data1[max_n]     = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    int data2[max_n]     = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+    int data[max_n]     = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
     int data3[max_n_2]   = {-1, -1, -1, -1, -1};
     int data4[max_n]     = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     using namespace oneapi::dpl::experimental::ranges;
     {
         sycl::buffer<int> A(data1, sycl::range<1>(max_n));
-        sycl::buffer<int> B(data2, sycl::range<1>(max_n));
+        sycl::buffer<int> B(data, sycl::range<1>(max_n));
         sycl::buffer<int> C(data3, sycl::range<1>(max_n_2));
         sycl::buffer<int> D(data4, sycl::range<1>(max_n));
                           
@@ -56,7 +56,7 @@ main()
 
     //check result
     // data1  = { 9,  8,  7,  6,  5, 4, 3, 2, 1, 0};
-    // data2  = {-1, -1, -1, -1, -1, 5, 6, 7, 8, 9};
+    // data  = {-1, -1, -1, -1, -1, 5, 6, 7, 8, 9};
     // data3  = { 0,  0,  0,  0,  0};
     // data4  = { 0,  1,  2,  3,  4, 0, 0, 0, 0, 0};
 
@@ -65,8 +65,8 @@ main()
 
     auto expected2_1 = views::fill(-1, max_n_2);
     auto expected2_2 = views::iota(max_n_2, max_n);
-    EXPECT_EQ_N(expected2_1.begin(), data2, max_n_2, "wrong result from swap");
-    EXPECT_EQ_N(expected2_2.begin(), data2 + max_n_2, max_n_2, "wrong result from swap");
+    EXPECT_EQ_N(expected2_1.begin(), data, max_n_2, "wrong result from swap");
+    EXPECT_EQ_N(expected2_2.begin(), data + max_n_2, max_n_2, "wrong result from swap");
 
     auto expected3 = views::fill(0, max_n_2);
     EXPECT_EQ_N(expected3.begin(), data3, max_n_2, "wrong result from swap");
