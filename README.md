@@ -1,5 +1,9 @@
 # Hair Simulation with PBD
 
+Course project for for [CSCE-689 Computer Animation](https://people.engr.tamu.edu/sueda/courses/CSCE450/2023F/index.html).
+
+Implementation of the paper: [Fast Simulation of Inextensible Hair and Fur” by Müller, et.al.](https://matthias-research.github.io/pages/publications/FTLHairFur.pdf)
+
 ![image](https://raw.githubusercontent.com/KarthikRIyer/HairSim/main/img/hair-sim.png?token=GHSAT0AAAAAACJ2SG5MNQTENA4NZWQY6KE4ZLX6BKA)
 
 ## Prequisites
