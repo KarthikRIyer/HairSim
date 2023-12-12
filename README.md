@@ -1,5 +1,7 @@
 # Hair Simulation with PBD
 
+![image](https://raw.githubusercontent.com/KarthikRIyer/HairSim/main/img/hair-sim.png?token=GHSAT0AAAAAACJ2SG5MNQTENA4NZWQY6KE4ZLX6BKA)
+
 ## Prequisites
 
 - OpenGL 4.x
